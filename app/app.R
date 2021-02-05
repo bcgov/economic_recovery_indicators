@@ -30,53 +30,14 @@ exports_stats <- exports_data %>%
   get_ytd_stats() %>%
   arrange(title)
 
+titles_all <- read_csv("indicators_list.csv")
+labels_all <- titles_all %>% select(label) %>% pull()
+
 ## get cansim data ----
-cansim_v <- c("v121514675", "v807928", "v52367245", "v42170715", "v32214475", "v2057793", "v2064706", 
-              "v1593420", "v64540928", "v2064705", "v41692462", "v121515395", "v121518515",
-              "v121524275", "v2064719", "v2064710", "v2064728", "v2064715", "v2064724", 
-              "v64542176", "v64543328", "v64541136", "v2064732", "v41692463", "v41692495")
-cansim_t <- c("<b>Non-Residential Building Permits</b><br>($Thousands, SA)",
-              "<b>Manufacturing Sales</b><br>($Thousands, SA)",
-              "<b>Retail Trade</b><br>($Thousands, SA)",
-              "<b>Food Services and Drinking Places</b><br>($Thousands, SA)",
-              "<b>Visitor Entries</b><br>(Persons, SA)",
-              "<b>Employment</b><br>(Thousands, SA)", 
-              "<b>Participation Rate</b><br>(%, SA)",
-              "<b>Average Hourly Wage Earnings</b><br>($, NSA)",
-              "<b>Employment Insurance Beneficiaries (1)</b><br>(Persons, NSA)",
-              "<b>Unemployment Rate</b><br>(%, SA)",
-              "<b>Consumer Price Index</b><br>(All Items, NSA)",
-              "<b>Non-Residential Building Permits Industrial</b>",
-              "<b>Non-Residential Building Permits Commercial</b>",
-              "<b>Non-Residential Building Permits Institutional and Governmental</b>",
-              "<b>Employment Females</b>",
-              "<b>Employment Males</b>",
-              "<b>B.C. Employment Youth, 15-24 years of age</b><br>(Thousands, SA)",
-              "<b>Participation Rate Males</b>",
-              "<b>Participation Rate Females</b>",
-              "<b>Employment Insurance Beneficiaries Males</b>",
-              "<b>Employment Insurance Beneficiaries Females</b>",
-              "<b>Employment Insurance Beneficiaries Youth (15-24 yo)</b>",
-              "<b>Unemployment Rate Youth (15-24 yo)</b>",
-              "<b>Consumer Price Index</b><br>(Food, NSA)",
-              "<b>Consumer Price Index</b><br>(Shelter, NSA)")
-titles <- data.frame(
-  vector = cansim_v,
-  title = factor(x = cansim_t, levels = cansim_t),
-  label = c("Non-Residential Building Permits", "Manufacturing Sales", "Retail Trade", 
-            "Food Services and Drinking Places", "Visitor Entries", "Employment", "Participation Rate", 
-            "Average Hourly Wage Earnings", "Employment Insurance Beneficiaries", "Unemployment Rate",
-            "Consumer Price Index", "Non-Residential Building Permits Industrial",
-            "Non-Residential Building Permits Commercial", 
-            "Non-Residential Building Permits Institutional and Governmental",
-            "Employment Females", "Employment Males", "B.C. Employment Youth, 15-24 years of age", 
-            "Participation Rate Males", "Participation Rate Females", 
-            "Employment Insurance Beneficiaries Males", "Employment Insurance Beneficiaries Females",
-            "Employment Insurance Beneficiaries Youth (15-24 yo)", "Unemployment Rate Youth (15-24 yo)",
-            "Consumer Price Index", "Consumer Price Index"),
-  filter_var = c("overall", "businesses", "businesses", "businesses", "businesses", "bcians", 
-                 "bcians", "bcians", "bcians", "bcians", "bcians", rep("chart", 14))
-)
+titles <- titles_all %>% filter(dataset == "cansim_auto") %>% select(-dataset)
+cansim_v <- titles %>% select(vector) %>% pull()
+cansim_t <- titles %>% select(title) %>% pull()
+titles <- titles %>% mutate(title = factor(x = cansim_t, levels = cansim_t))
 
 cansim_data <- cansim::get_cansim_vector(
   vectors = cansim_v,
@@ -92,19 +53,11 @@ cansim_stats <- cansim_data %>%
   get_ytd_stats() %>%
   arrange(title)
 
-## all_data ----
-temp <- non_cansim_data$title %>% unique() %>% as.character()
-levels_all <- c(## Overall Economy
-                temp[1],            #"<b>International Merchandise Exports</b><br>($Thousands, SA)", 
-                cansim_t[1],        #"<b>Non-Residential Building Permits</b><br>($Thousands, SA)
-                temp[2],            #"<b>US Housing Starts</b><br>(Thousands, SAAR)"
-                ## Businesses
-                cansim_t[2:3], temp[3], cansim_t[4:5], temp[4],
-                ## British Columbians
-                cansim_t[6:25], temp[5:7])
-
+## merge data ----
 all_data <- bind_rows(cansim_data, non_cansim_data) %>%
-  mutate(title = factor(title, levels = levels_all)) %>%
+  mutate(title = factor(title, levels = titles_all$title))
+
+all_stats <- all_data %>%
   get_mom_stats() %>%
   get_yoy_stats() %>%
   get_ytd_stats() %>%
@@ -144,6 +97,7 @@ ui <- function(req) {
     column(width = 12,
            style = "margin-top:100px",
              tabsetPanel(id = "tabs",
+               ## Summary ----
                tabPanel("Summary",
                         value = 1,
                         tags$fieldset(
@@ -224,6 +178,7 @@ ui <- function(req) {
                                          br()
                         )
                        ),
+               ## Detailed Summary ----
                tabPanel("Detailed Summary",
                         value = 2,
                        # style="background-color:#F2F2F2",
@@ -256,6 +211,7 @@ ui <- function(req) {
                                              please contact BCStats: BC.Stats@gov.bc.ca'),
                         br()
                         ),
+               ## Charts ----
                tabPanel("Charts",
                         value = 3,
                         #style="background-color:#F2F2F2",
@@ -265,8 +221,8 @@ ui <- function(req) {
                           selectInput(
                             inputId = "indicator",
                             label = NULL,
-                            choices = titles$label,
-                            selected = titles$label[1])
+                            choices = labels_all,
+                            selected = labels_all[1])
                         ),
                         tags$fieldset(
                         plotlyOutput(outputId = "charts"),
@@ -305,7 +261,7 @@ server <- function(input, output, session) {
   
   output$ERI_overall <- DT::renderDataTable({
     
-    data <- all_data %>%  #cansim_stats %>%
+    data <- all_stats %>%  #cansim_stats %>%
       filter(filter_var == "overall") %>%
       format_summary_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:4)),
@@ -316,7 +272,7 @@ server <- function(input, output, session) {
   
   output$ERI_businesses <- DT::renderDataTable({
     
-    data <- all_data %>%  #cansim_stats %>%
+    data <- all_stats %>%  #cansim_stats %>%
       filter(filter_var == "businesses") %>%
       format_summary_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:4)),
@@ -327,7 +283,7 @@ server <- function(input, output, session) {
   
   output$ERI_bcians <- DT::renderDataTable({
     
-    data <- all_data %>%  #cansim_stats %>%
+    data <- all_stats %>%  #cansim_stats %>%
       filter(filter_var == "bcians") %>%
       format_summary_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:4)),
@@ -369,7 +325,7 @@ server <- function(input, output, session) {
   
   output$DET_overall <- DT::renderDataTable({
     
-    data <- all_data %>%  #cansim_stats %>%
+    data <- all_stats %>%  #cansim_stats %>%
       filter(filter_var == "overall") %>%
       format_detailed_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:8)),
@@ -380,7 +336,7 @@ server <- function(input, output, session) {
   
   output$DET_businesses <- DT::renderDataTable({
     
-    data <- all_data %>%  #cansim_stats %>%
+    data <- all_stats %>%  #cansim_stats %>%
       filter(filter_var == "businesses") %>%
       format_detailed_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:8)),
@@ -391,7 +347,7 @@ server <- function(input, output, session) {
   
   output$DET_bcians <- DT::renderDataTable({
     
-    data <- all_data %>%  #cansim_stats %>%
+    data <- all_stats %>%  #cansim_stats %>%
       filter(filter_var == "bcians") %>%
       format_detailed_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:8)),
@@ -405,7 +361,7 @@ server <- function(input, output, session) {
     
     req(input$indicator)
     
-    line_chart <- cansim_data %>% 
+    line_chart <- all_data %>% 
         filter(label == input$indicator)
     
     list(line_chart = line_chart)
