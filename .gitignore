@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+app/data*
+sandbox.R
+app/scripts/private_setup.R
