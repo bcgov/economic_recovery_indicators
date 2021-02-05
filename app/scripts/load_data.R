@@ -1,8 +1,3 @@
-#### set variables ----
-
-## !!!! update project folder location (needed to read in Exports and Employment data) !!!!
-PROJECT_LOCATION <- "21-0835 Pandemic Economic Indicator Reporting"
-DRIVE_LOCATION <- "//SFP.IDIR.BCGOV/S152/S52001/BCSTATS/PROJECTS/"
 
 ## !!!! DON'T NEED TO CHANGE ANYTHING BEYOND THIS POINT !!!!
 
@@ -17,14 +12,14 @@ if (!require(RODBC)) install.packages("RODBC"); library(RODBC)  ## needed for st
 
 #### prep ----
 
+## get statbase connection and folder locations
+source("app/scripts/private_setup.R")
+
 ## months conversion
 months <- data.frame(Month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
                              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                      m = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
                      stringsAsFactors = FALSE)
-
-## set up statbase connection
-source("app/scripts/statbase_connection.R")
 
 
 #### get exports data ----
