@@ -1,0 +1,35 @@
+order,title,label,filter_var,source,vector,dataset
+1,"<b>International Merchandise Exports</b><br>($Thousands, SA)",International Merchandise Exports,overall,BC Stats,,non_cansim
+2,"<b>Non-Residential Building Permits</b><br>($Thousands, SA)",Non-Residential Building Permits,overall,Statistics Canada/Haver Analytics,v121514675,cansim_auto
+2,<b>Non-Residential Building Permits Industrial</b>,Non-Residential Building Permits Industrial,chart,Statistics Canada,v121515395,cansim_auto
+2,<b>Non-Residential Building Permits Commercial</b>,Non-Residential Building Permits Commercial,chart,Statistics Canada,v121518515,cansim_auto
+2,<b>Non-Residential Building Permits Institutional and Governmental</b>,Non-Residential Building Permits Institutional and Governmental,chart,Statistics Canada,v121524275,cansim_auto
+3,"<b>US Housing Starts</b><br>(Thousands, SAAR)",US Housing Starts,overall,US Census Bureau,v122103,non_cansim
+4,"<b>Manufacturing Sales</b><br>($Thousands, SA)",Manufacturing Sales,businesses,Statistics Canada/Haver Analytics,v807928,cansim_auto
+5,"<b>Retail Trade</b><br>($Thousands, SA)",Retail Trade,businesses,Statistics Canada/Haver Analytics,v52367245,cansim_auto
+6,"<b>Housing Starts</b><br>(units, SAAR)",Housing Starts,businesses,Statistics Canada/Haver Analytics,gm00013,non_cansim
+7,"<b>Food Services and Drinking Places</b><br>($Thousands, SA)",Food Services and Drinking Places,businesses,Statistics Canada,v42170715,cansim_auto
+8,"<b>Visitor Entries</b><br>(Persons, SA)",Visitor Entries,businesses,Statistics Canada/Haver Analytics,v32214475,cansim_auto
+9,"<b>Hotel Occupancy Rate</b><br>(%, NSA)",Hotel Occupancy Rate,businesses,CBRE Hotels' Trends,C40,non_cansim
+10,"<b>Employment</b><br>(Thousands, SA)",Employment,bcians,Statistics Canada/Haver Analytics,v2057793,cansim_auto
+11,<b>Employment Females</b>,Employment Females,chart,Statistics Canada/Haver Analytics,v2064719,cansim_auto
+11,<b>Employment Males</b>,Employment Males,chart,Statistics Canada/Haver Analytics,v2064710,cansim_auto
+12,"<b>B.C. Employment Youth, 15-24 years of age</b><br>(Thousands, SA)","B.C. Employment Youth, 15-24 years of age",chart,Statistics Canada,v2064728,cansim_auto
+13,"<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, Three-Month Moving Average)","Indigenous Employment, Off-Reserve",chart,Statistics Canada,,non_cansim
+14,"<b>Immigrant Employment (Very Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)",Immigrant Employment,chart,Statistics Canada,,non_cansim
+14,"<b>Immigrant Employment (Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)",Immigrant Employment,chart,Statistics Canada,,non_cansim
+15,"<b>Participation Rate</b><br>(%, SA)",Participation Rate,bcians,Statistics Canada/Haver Analytics,v2064706,cansim_auto
+15,<b>Participation Rate Males</b>,Participation Rate Males,chart,Statistics Canada/Haver Analytics,v2064715,cansim_auto
+15,<b>Participation Rate Females</b>,Participation Rate Females,chart,Statistics Canada/Haver Analytics,v2064724,cansim_auto
+16,"<b>Average Hourly Wage Earnings</b><br>($, NSA)",Average Hourly Wage Earnings,bcians,Statistics Canada/Haver Analytics,v1593420,cansim_auto
+17,"<b>Employment Insurance Beneficiaries (1)</b><br>(Persons, NSA)",Employment Insurance Beneficiaries,bcians,Statistics Canada,v64540928,cansim_auto
+18,<b>Employment Insurance Beneficiaries Males</b>,Employment Insurance Beneficiaries Males,chart,Statistics Canada,v64542176,cansim_auto
+18,<b>Employment Insurance Beneficiaries Females</b>,Employment Insurance Beneficiaries Females,chart,Statistics Canada,v64543328,cansim_auto
+19,<b>Employment Insurance Beneficiaries Youth (15-24 yo)</b>,Employment Insurance Beneficiaries Youth (15-24 yo),chart,Statistics Canada,v64541136,cansim_auto
+20,"<b>Unemployment Rate</b><br>(%, SA)",Unemployment Rate,bcians,Statistics Canada,v2064705,cansim_auto
+20,"<b>Unemployment Rate</b><br>Males (%, SA)",Unemployment Rate Males,chart,Statistics Canada,v2064714,cansim_auto
+20,"<b>Unemployment Rate</b><br>Females (%, SA)",Unemployment Rate Females,chart,Statistics Canada,v2064723,cansim_auto
+21,<b>Unemployment Rate Youth (15-24 yo)</b>,Unemployment Rate Youth (15-24 yo),chart,Statistics Canada,v2064732,cansim_auto
+22,"<b>Consumer Price Index</b><br>(All Items, NSA)",Consumer Price Index,bcians,BC Stats calculations using Statistics Canada/Haver Analytics,v41692462,cansim_auto
+22,"<b>Consumer Price Index</b><br>(Food, NSA)",Consumer Price Index,chart,BC Stats calculations using Statistics Canada/Haver Analytics,v41692463,cansim_auto
+22,"<b>Consumer Price Index</b><br>(Shelter, NSA)",Consumer Price Index,chart,BC Stats calculations using Statistics Canada/Haver Analytics,v41692495,cansim_auto
