@@ -1,6 +1,5 @@
-
 ## !!!! DON'T NEED TO CHANGE ANYTHING BEYOND THIS POINT !!!!
-
+## Script will output two .rds data files to app/data that app will read in ##
 
 #### load packages ----
 if (!require('zoo')) install.packages('zoo'); library(zoo)      ## needed for the Haver interface
@@ -73,6 +72,7 @@ data_trip <- openxlsx::readWorkbook(xlsxFile = paste0(DRIVE_LOCATION, PROJECT_LO
                                    "Other Asia_Natural Gas", "Other Asia_Coal",
                                    "World_All", "World_Lumber", "World_Pulp", "World_Copper",
                                    "World_Aluminum", "World_Natural Gas", "World_Coal"))) %>%
+  filter(title != "World_All") %>%
   arrange(title) %>%
   select(title, INDICATOR, ref_date, destination, commodity, value)
 
@@ -213,9 +213,9 @@ titles_nc <- c(rep("<b>International Merchandise Exports</b><br>($Thousands, SA)
                rep("<b>US Housing Starts</b><br>(Thousands, SAAR)", dim(data_ushs)[1]),
                rep("<b>Housing Starts</b><br>(units, SAAR)", dim(data_cmhc)[1]),
                rep("<b>Hotel Occupancy Rate</b><br>(%, NSA)", dim(data_hor)[1]),
-               rep("<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, Three-Month Moving Average)", dim(data_emp)[1]/3),
-               rep("<b>Immigrant Employment (Very Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)", dim(data_emp)[1]/3),
-               rep("<b>Immigrant Employment (Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)", dim(data_emp)[1]/3))
+               rep(c("<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, Three-Month Moving Average)",
+                     "<b>Immigrant Employment (Very Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)",
+                     "<b>Immigrant Employment (Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)"), 132))
 non_cansim_data <- bind_rows(data_ime, data_ushs, data_cmhc, data_hor, data_emp) %>%
   mutate(title = factor(x = titles_nc,
                         levels = c("<b>International Merchandise Exports</b><br>($Thousands, SA)",
