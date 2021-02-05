@@ -142,7 +142,7 @@ data_cmhc <- haver.data(codes = c("GM00013"),
 
 
 ### * (statbase) Hotel Occupancy Rate (%, NSA) ----
-## Source: CBRE Hotels
+## Source: CBRE Hotels' Trends
 ## Statbase: C40
 ## J:\PGMS\SQL Statbase\Data Extraction\Statbase.exe
 ## alternate source: http://www.mtc-currentperformance.com/Hotel.aspx
@@ -209,24 +209,20 @@ data_emp <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyo
 
 
 ### * bind non-cansim datasets ----
-titles_nc <- c(rep("<b>International Merchandise Exports</b><br>($Thousands, SA)", dim(data_ime)[1]),
-               rep("<b>US Housing Starts</b><br>(Thousands, SAAR)", dim(data_ushs)[1]),
-               rep("<b>Housing Starts</b><br>(units, SAAR)", dim(data_cmhc)[1]),
-               rep("<b>Hotel Occupancy Rate</b><br>(%, NSA)", dim(data_hor)[1]),
-               rep(c("<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, Three-Month Moving Average)",
-                     "<b>Immigrant Employment (Very Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)",
-                     "<b>Immigrant Employment (Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)"), 132))
+temp <- read_csv(here::here("/app/indicators_list.csv")) %>% 
+  filter(dataset == "non_cansim") %>% select(title) %>% pull()
+titles_nc <- c(rep(temp[1], dim(data_ime)[1]),
+               rep(temp[2], dim(data_ushs)[1]),
+               rep(temp[3], dim(data_cmhc)[1]),
+               rep(temp[4], dim(data_hor)[1]),
+               rep(c(temp[5:7]), 132))
 non_cansim_data <- bind_rows(data_ime, data_ushs, data_cmhc, data_hor, data_emp) %>%
-  mutate(title = factor(x = titles_nc,
-                        levels = c("<b>International Merchandise Exports</b><br>($Thousands, SA)",
-                                   "<b>US Housing Starts</b><br>(Thousands, SAAR)",
-                                   "<b>Housing Starts</b><br>(units, SAAR)",
-                                   "<b>Hotel Occupancy Rate</b><br>(%, NSA)",
-                                   "<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, Three-Month Moving Average)",
-                                   "<b>Immigrant Employment (Very Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)",
-                                   "<b>Immigrant Employment (Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)")),
+  mutate(title = factor(x = titles_nc, levels = temp),
          label = factor(label), 
          filter_var = factor(filter_var))
+
+rm(temp, titles_nc, data_ime, data_ushs, data_cmhc, data_hor, data_emp, 
+   cn, DRIVE_LOCATION, PROJECT_LOCATION, months)
 
 
 #### save datasets ----
