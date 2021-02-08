@@ -12,12 +12,16 @@ library(DT)
 library(scales)
 library(purrr)
 
+options(scipen = 999999999)  ## so chart axes read properly
+
 ## chart theme/functions ----
 source("scripts/chart_theme.R")
 source("scripts/functions.R")
 
 ## load data ----
-non_cansim_data <- readRDS("data/non_cansim_data.rds")
+non_cansim_data <- readRDS("data/non_cansim_data.rds") %>%
+  filter(str_sub(ref_date, start = 1, end = 4) >= 2010)
+
 non_cansim_stats <- non_cansim_data %>%
   get_mom_stats() %>%
   get_yoy_stats() %>%
@@ -32,6 +36,7 @@ exports_stats <- exports_data %>%
 
 titles_all <- read_csv("indicators_list.csv")
 labels_all <- titles_all %>% select(label) %>% pull()
+charts_multi <- titles_all %>% group_by(order) %>% tally() %>% filter(n > 1) %>% pull(order)
 
 ## get cansim data ----
 titles <- titles_all %>% filter(dataset == "cansim_auto") %>% select(-dataset)
@@ -55,13 +60,22 @@ cansim_stats <- cansim_data %>%
 
 ## merge data ----
 all_data <- bind_rows(cansim_data, non_cansim_data) %>%
-  mutate(title = factor(title, levels = titles_all$title))
+  mutate(title = factor(title, levels = unique(titles_all$title))) %>%
+  left_join(titles_all %>% select(order, title, line), by = "title")
 
 all_stats <- all_data %>%
   get_mom_stats() %>%
   get_yoy_stats() %>%
   get_ytd_stats() %>%
   arrange(title)
+
+## get Consumer Price Index % change Year-Over-Year ----
+cpi_yoy <- all_data %>%
+  filter(label == "Consumer Price Index") %>%
+  get_yoy_stats() %>%
+  filter(!is.na(yoy_pct)) %>%
+  mutate(title = "<b>Consumer Price Index %</b><br>Change Year-over-Year",
+         yoy_pct = janitor::round_half_up(yoy_pct, digits = 1))
 
 ## start of app ----
 # UI demonstrating column layouts
@@ -218,10 +232,11 @@ ui <- function(req) {
                         br(),
                         tags$fieldset(
                           tags$legend(h3("Indicator")),
-                          selectInput(
+                          radioButtons(inline = TRUE,
+                            #selectInput( ## drop-down list
                             inputId = "indicator",
                             label = NULL,
-                            choices = labels_all,
+                            choices = unique(labels_all),
                             selected = labels_all[1])
                         ),
                         tags$fieldset(
@@ -364,6 +379,19 @@ server <- function(input, output, session) {
     line_chart <- all_data %>% 
         filter(label == input$indicator)
     
+    ## tables display units, chart displays in thousands
+    if(input$indicator == "Housing Starts") {
+      line_chart <- line_chart %>%
+        mutate(value = janitor::round_half_up(value/1000, digits = 0),
+               title = str_replace(title, pattern = "Units", replacement = "Thousands"))
+    }
+    ## tables display values, chart displays y-o-y
+    if(input$indicator == "Consumer Price Index") {
+      line_chart <- cpi_yoy %>% 
+        select(-value) %>%
+        rename(value = yoy_pct)
+    }
+    
     list(line_chart = line_chart)
   })
   
@@ -371,13 +399,12 @@ server <- function(input, output, session) {
 
     if(is.null(get_data()$line_chart)){
       NULL
-    }
-
-    else{
-
+      
+    } else {
+      
+      # prep plot
       p <- ggplot(get_data()$line_chart,
                   aes(x = ref_date, y = value)) +
-        geom_line() +
         bcstats_chart_theme +
         labs(x = NULL,
              y = NULL, 
@@ -386,7 +413,31 @@ server <- function(input, output, session) {
                                 max(get_data()$line_chart$ref_date) + months(3)),
                      expand = c(0,0),
                      date_breaks = "6 months",
-                     date_labels = "%b\n%Y" )
+                     date_labels = "%b %Y")
+                     # date_labels = "%b\n%Y")
+      
+      ## multi-line charts need geom_line colored by line, with no-title legend
+      if(any(get_data()$line_chart$order %in% charts_multi)) {
+        
+        p <- p +
+            geom_line(aes(color = line)) +              # color each line differently
+            scale_color_manual(values = line_colors) +  # use specified colors (up to 4)
+            bcstats_chart_theme +
+            theme(legend.title = element_blank(),
+                  legend.position = "bottom")           # this isn't working
+       
+        ## And, if CPI chart, add horizontal line at 0
+        if(input$indicator == "Consumer Price Index") {
+          p <- p +
+            # scale_y_continuous(labels = scales::label_percent(scale = 1)) +
+            geom_hline(yintercept = 0)
+
+        }
+      } else {
+        
+        p <- p + geom_line()
+        
+      }
 
       p <- ggplotly(p)
 
@@ -398,7 +449,7 @@ server <- function(input, output, session) {
     
     ## This will have to be more dynamic when we get other data sources
     ## Possibly add "Source" as a column to titles dataframe at top of app
-    if(str_detect(get_data()$line_chart$title, "(1)")) {
+    if(any(str_detect(get_data()$line_chart$title, "(1)"))) {
       HTML("Source: Statistics Canada <br>
            (1) This dataset does not include persons who received the Canada Emergency Response 
            Benefit (CERB). Between March and September 2020, CERB was introduced and the number of 
@@ -406,8 +457,8 @@ server <- function(input, output, session) {
            ended on September 27, 2020 and eligibility rules for EI were changed, resulting in a 
            dramatic increase in the number of EI beneficiaries in October 2020.")
       
-    }else {
-      HTML("Source: Statistics Canada")
+    } else {
+      HTML(paste0("Source: ", "Statistics Canada"))
     }
     
   })
