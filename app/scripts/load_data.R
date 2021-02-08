@@ -215,9 +215,9 @@ titles_nc <- c(rep(temp[1], dim(data_ime)[1]),
                rep(temp[2], dim(data_ushs)[1]),
                rep(temp[3], dim(data_cmhc)[1]),
                rep(temp[4], dim(data_hor)[1]),
-               rep(c(temp[5:7]), 132))
+               rep(c(temp[5:7]), dim(data_emp)[1]/3))
 non_cansim_data <- bind_rows(data_ime, data_ushs, data_cmhc, data_hor, data_emp) %>%
-  mutate(title = factor(x = titles_nc, levels = temp),
+  mutate(title = factor(x = titles_nc, levels = temp[1:6]),
          label = factor(label), 
          filter_var = factor(filter_var))
 
