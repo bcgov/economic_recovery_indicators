@@ -230,19 +230,25 @@ ui <- function(req) {
                         value = 3,
                         #style="background-color:#F2F2F2",
                         br(),
+                        column(width = 3, 
                         tags$fieldset(
                           tags$legend(h3("Indicator")),
-                          radioButtons(inline = TRUE,
-                            #selectInput( ## drop-down list
+                          #radioButtons(inline = TRUE,
+                            selectInput( ## drop-down list
                             inputId = "indicator",
                             label = NULL,
                             choices = unique(labels_all),
-                            selected = labels_all[1])
-                        ),
+                            selected = labels_all[1],
+                            selectize = FALSE,
+                            size = length(unique(labels_all)),
+                            width = "100%")
+                        )),
+                        column(width = 9,
                         tags$fieldset(
+                          br(),br(),br(),
                         plotlyOutput(outputId = "charts"),
                         uiOutput(outputId = "caption")
-                        ),
+                        )),
                         br(),
                         # Data table of chart to go here   
                         br()
