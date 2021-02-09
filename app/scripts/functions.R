@@ -71,13 +71,13 @@ format_summary_data <- function(data) {
       mutate(month = month(ref_date, label = TRUE, abbr = TRUE),
              icon_mom = case_when(mom_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
                                   mom_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
-                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f7f568"))),
+                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236"))),
              icon_yoy = case_when(yoy_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
                                   yoy_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
-                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f7f568"))),
+                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236"))),
              icon_ytd = case_when(ytd_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
                                   ytd_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
-                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f7f568")))) %>%
+                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236")))) %>%
       select(`INDICATOR` = title, 
              `Reference Month` = month, 
              `Compared to Previous Month` = icon_mom, 
@@ -94,10 +94,10 @@ format_summary_data <- function(data) {
              Estimate = prettyNum(value, big.mark = ","),
              icon_yoy = case_when(yoy_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
                                   yoy_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
-                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f7f568"))),
+                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236"))),
              icon_ytd = case_when(ytd_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
                                   ytd_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
-                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f7f568")))) %>%
+                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236")))) %>%
       select(INDICATOR,
              `Reference Month` = month, 
              Estimate, 
