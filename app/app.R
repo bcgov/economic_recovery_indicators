@@ -1,3 +1,8 @@
+## Economic Recovery Indicators app ----
+## app title: Economic-Indicators
+## app ID: 3622761
+
+
 ## load libraries ----
 library(tidyverse)
 library(shiny)
