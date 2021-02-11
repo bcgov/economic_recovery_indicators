@@ -172,6 +172,8 @@ data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints 
 ### ** Indigenous B.C. Employment, Off-Reserve (Thousands, Three-Month Moving Average)
 ## J:\DATA\StatCan\LABOURFORCESURVEY\Aboriginal LFS\<Year> Monthly\<YYYY-MM>\
 ##        4ctl_abo_cow_3MMA.ivt
+## aboriginal employment, both sexes, 15 years and up data totals for BC
+## Make sure Aboriginal data is set to aboriginal-aboriginal instead of aboriginal-total
 
 
 ### ** Immigrant Employment, B.C. (Thousands, Three-Month Moving Average) – Recent immigrants
@@ -186,8 +188,8 @@ data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints 
 ### ** Indigenous & Immigrant Employment data
 data_emp <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyond2020data.csv")) %>%
   ## prep for YYYY-MM-DD ref_date
-  mutate(Year = paste0("20", str_sub(Month, start = -2)),
-         Month = str_sub(Month, end = 3)) %>%
+  mutate(Year = paste0("20", str_sub(Month, start = 1, end = 2)),   ##Year = paste0("20", str_sub(Month, start = -2)),
+         Month = str_sub(Month, start = 4)) %>%
   ## earlier data is blank for immigrants and reads in as "-"
   filter(Year >= 2010) %>%
   left_join(months, by = "Month") %>%
@@ -198,8 +200,8 @@ data_emp <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyo
   pivot_longer(-ref_date, names_to = "temp", values_to = "value") %>%
   ## create vars needed for app
   mutate(title = case_when(temp == "Ind" ~ "<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, Three-Month Moving Average)",
-                           temp == "VRI" ~ "<b>Immigrant Employment (Very Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)",
-                           temp == "RI" ~ "<b>Immigrant Employment (Recent Immigrants)</b><br>(Thousands, Three-Month Moving Average)"),
+                           temp == "VRI" ~ "<b>Immigrant Employment, Very Recent Immigrants</b><br>(Thousands, Three-Month Moving Average)",
+                           temp == "RI" ~ "<b>Immigrant Employment, Recent Immigrants</b><br>(Thousands, Three-Month Moving Average)"),
          label = case_when(temp == "Ind" ~ "Indigenous Employment, Off-Reserve",
                            TRUE ~ "Immigrant Employment"),
          filter_var = "chart",
@@ -217,7 +219,7 @@ titles_nc <- c(rep(temp[1], dim(data_ime)[1]),
                rep(temp[4], dim(data_hor)[1]),
                rep(c(temp[5:7]), dim(data_emp)[1]/3))
 non_cansim_data <- bind_rows(data_ime, data_ushs, data_cmhc, data_hor, data_emp) %>%
-  mutate(title = factor(x = titles_nc, levels = temp[1:6]),
+  mutate(title = factor(x = titles_nc, levels = temp[1:7]),
          label = factor(label), 
          filter_var = factor(filter_var))
 
