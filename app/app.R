@@ -61,7 +61,7 @@ cansim_stats <- cansim_data %>%
 ## merge data ----
 all_data <- bind_rows(cansim_data, non_cansim_data) %>%
   mutate(title = factor(title, levels = unique(titles_all$title))) %>%
-  left_join(titles_all %>% select(order, title, line), by = "title")
+  left_join(titles_all %>% select(order, title, line, source), by = "title")
 
 all_stats <- all_data %>%
   get_mom_stats() %>%
@@ -453,18 +453,17 @@ server <- function(input, output, session) {
   
   output$caption <- renderUI({
     
-    ## This will have to be more dynamic when we get other data sources
-    ## Possibly add "Source" as a column to titles dataframe at top of app
-    if(any(str_detect(get_data()$line_chart$title, "(1)"))) {
-      HTML("Source: Statistics Canada <br>
+   
+    if(any(str_detect(get_data()$line_chart$title, "\\(1\\)"))) {
+      HTML(paste0("Source: ", get_data()$line_chart$source %>% head(1), " <br>
            (1) This dataset does not include persons who received the Canada Emergency Response 
            Benefit (CERB). Between March and September 2020, CERB was introduced and the number of 
            EI recipients dropped significantly as persons could not receive both. The CERB program 
            ended on September 27, 2020 and eligibility rules for EI were changed, resulting in a 
-           dramatic increase in the number of EI beneficiaries in October 2020.")
+           dramatic increase in the number of EI beneficiaries in October 2020."))
       
     } else {
-      HTML(paste0("Source: ", "Statistics Canada"))
+      HTML(paste0("Source: ", get_data()$line_chart$source %>% head(1)))
     }
     
   })
