@@ -23,7 +23,7 @@ months <- data.frame(Month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
 
 #### get exports data ----
 ### * (trip) Key Exports by Destination and Commodity ----
-## Source: Statistics Canada
+## Source: Statistics Canada (open-data license by Stats Can)
 ## TRIP: Pandemic Indicators Report
 ## \\SFP.IDIR.BCGOV\S152\S52002\Trade\TRIP files\Application
 ## this data is manually updated by running the TRIP Application 'Pandemic Indicators Report' job and
@@ -79,7 +79,7 @@ data_trip <- openxlsx::readWorkbook(xlsxFile = paste0(DRIVE_LOCATION, PROJECT_LO
 
 #### get non-CANSIM data ----
 ### * (web) International Merchandise Exports ($Thousands, SA) ----
-## Source: BC Stats
+## Source: BC Stats (we're already publishing this on our website)
 ## https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data
 ## monthly sa (seasonally adjusted) data file
 data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov/data/statistics/business-industry-trade/trade/seasonally_adjusted_exports.xlsx",
@@ -101,7 +101,7 @@ data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov
 
 
 ### * (statbase) US Housing Starts (Thousands, SAAR) ----
-## Source: US Census Bureau
+## Source: US Census Bureau (open-data license by US Bureau)
 ## Statbase: V122103
 ## J:\PGMS\SQL Statbase\Data Extraction\Statbase.exe
 
@@ -142,12 +142,12 @@ data_cmhc <- haver.data(codes = c("GM00013"),
 
 
 ### * (statbase) Hotel Occupancy Rate (%, NSA) ----
-## Source: CBRE Hotels' Trends
+## Source: CBRE Hotels' Trends (data all available on website noted below)
 ## Statbase: C40
 ## J:\PGMS\SQL Statbase\Data Extraction\Statbase.exe
 ## alternate source: http://www.mtc-currentperformance.com/Hotel.aspx
 ##      choose: By Month, Geography: BC, Measure Occupancy rate, Refresh, Show Table; = C40
-##      can't see a way to scrape the data programatically
+##      can't see a way to scrape the data programmatically
 
 data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints WHERE SeriesId IN 
                            (SELECT SeriesId FROM dbo.GetSeriesId
@@ -164,7 +164,7 @@ data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints 
 
 ### * (ivt) Indigenous & Immigrant Employment data ----
 ## install: https://www.statcan.gc.ca/eng/public/beyond20-20
-## Source: Statistics Canada
+## Source: Statistics Canada (open-data license by Stats Can)
 ## Beyond 2020 Tables (.ivt files)
 ## this data is manually updated by opening each .ivt file for the corresponding month and year
 ##   then copying to the appropriate column in Beyond2020data.csv
