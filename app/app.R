@@ -412,9 +412,6 @@ server <- function(input, output, session) {
       p <- ggplot(get_data()$line_chart,
                   aes(x = ref_date, y = value)) +
         bcstats_chart_theme +
-        labs(x = NULL,
-             y = NULL, 
-             title = get_data()$line_chart$title %>% head(1) %>% as.character()) +
         scale_x_date(limits = c(min(get_data()$line_chart$ref_date),
                                 max(get_data()$line_chart$ref_date) + months(3)),
                      expand = c(0,0),
@@ -426,6 +423,9 @@ server <- function(input, output, session) {
       if(any(get_data()$line_chart$order %in% charts_multi)) {
         
         p <- p +
+          labs(x = NULL,
+               y = NULL, 
+               title = get_data()$line_chart$label %>% head(1) %>% as.character()) +
             geom_line(aes(color = line)) +              # color each line differently
             scale_color_manual(values = line_colors) +  # use specified colors (up to 4)
             bcstats_chart_theme +
@@ -441,7 +441,11 @@ server <- function(input, output, session) {
         }
       } else {
         
-        p <- p + geom_line()
+        p <- p + 
+          geom_line() + 
+          labs(x = NULL,
+               y = NULL, 
+               title = get_data()$line_chart$title %>% head(1) %>% as.character())
         
       }
 
