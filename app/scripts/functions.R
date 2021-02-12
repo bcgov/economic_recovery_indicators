@@ -68,7 +68,7 @@ format_summary_data <- function(data) {
   ## Key economic recover indicators have m-o-m but no estimate
   if(exists("mom_val", data)){
     data %>%
-      mutate(month = month(ref_date, label = TRUE, abbr = TRUE),
+      mutate(month = paste(month(ref_date, label = TRUE, abbr = TRUE), year(ref_date)),
              icon_mom = case_when(mom_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
                                   mom_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
                                   TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236"))),
@@ -81,8 +81,8 @@ format_summary_data <- function(data) {
       select(`INDICATOR` = title, 
              `Reference Month` = month, 
              `Compared to Previous Month` = icon_mom, 
-             `Compared to 12 Months Ago` = icon_yoy, 
-             `Year-to-Date Compared to Same Period 12 Months Ago` = icon_ytd)
+             `Compared to Same Month Previous Year` = icon_yoy, 
+             `Year-to-Date Compared to Same Period Previous Year` = icon_ytd)
     
   } 
   
@@ -90,7 +90,7 @@ format_summary_data <- function(data) {
   else{
     
     data %>%
-      mutate(month = month(ref_date, label = TRUE, abbr = TRUE),
+      mutate(month = paste(month(ref_date, label = TRUE, abbr = TRUE), year(ref_date)),
              Estimate = prettyNum(value, big.mark = ","),
              icon_yoy = case_when(yoy_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
                                   yoy_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
@@ -101,8 +101,8 @@ format_summary_data <- function(data) {
       select(INDICATOR,
              `Reference Month` = month, 
              Estimate, 
-             `Compared to 12 Months Ago` = icon_yoy, 
-             `Year-to-Date Compared to Same Period 12 Months Ago` = icon_ytd)
+             `Compared to Same Month Previous Year` = icon_yoy, 
+             `Year-to-Date Compared to Same Period Previous Year` = icon_ytd)
     
   }
   
@@ -112,7 +112,7 @@ format_summary_data <- function(data) {
 format_detailed_data <- function(data){
   
   data %>%
-    mutate(month = month(ref_date, label = TRUE, abbr = TRUE),
+    mutate(month = paste(month(ref_date, label = TRUE, abbr = TRUE), year(ref_date)),
            Estimate = case_when(str_detect(title, "%") ~ paste0(round_half_up(value, 1), "%"),
                                 str_detect(title, "Average Hourly Wage Earnings") ~ prettyNum(round_half_up(value, 2), big.mark = ","),
                                 str_detect(title, "Consumer Price Index") ~ prettyNum(round_half_up(value, 1), big.mark = ","),
@@ -151,8 +151,8 @@ custom_headers <- htmltools::withTags(table(
         th(rowspan = 2, 'Reference Month'),
         th(rowspan = 2, 'Estimate'),
         th(colspan = 2, 'Compared to Previous Month', style="text-align:center"),
-        th(colspan = 2, 'Compared to 12 Months Ago', style="text-align:center"),
-        th(colspan = 2, 'Year-to-Date Compared to Same Period 12 Months Ago', style="text-align:center")
+        th(colspan = 2, 'Compared to Same Month Previous Year', style="text-align:center"),
+        th(colspan = 2, 'Year-to-Date Compared to Same Period Previous Year', style="text-align:center")
       ),
       tr(
         lapply(rep(c('# Chg', '% Chg'), 3), th)
