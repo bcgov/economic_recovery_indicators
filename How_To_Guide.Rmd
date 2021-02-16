@@ -1,0 +1,114 @@
+---
+title: "Economic Recovery Indicators How-To Guide"
+author: BC Stats
+date: "Last updated: `r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+The **British Columbia - Economic Recovery Indicators** report began in September 2020 as a bi-weekly PDF report that provides readers a view of select data relevant for monitoring the impacts of COVID-19 in BC and exploring key economic trends as the COVID-19 situation evolves. It was transitioned to an online shiny application (<https://bcstats.shinyapps.io/Economic-Indicators/>) as of February 22, 2021, along with monthly PDF reports.
+
+
+## Indicators Meta-data
+
+In this project's app folder, the **indicators_list.csv** contains the meta-data needed for each indicator. This is where you would update, *if needed*, which indicators to include in the app, and their corresponding pieces of information.  
+
+* *order* determines the charts order. A number entered multiple times indicates a multi-line chart (e.g., "2" is listed 4 times - once for each line in the Non-Residential Building Permits chart).  
+* *title* is the html-formatted title of each indicator. This is what shows in the tables and most charts, and is what is used to create month-over-month, year-over-year, and year-to-date stats. 
+* *label* is the non-formatted title of each indicator. It is the title for the multi-line charts.  
+* *line* is the legend entry for multi-line charts. All other charts are "NA".  
+* *filter_var* is used to determine which box the indicator belongs to (i.e., "OVERALL ECONOMY", "BUSINESSES", or "BRITISH COLUMBIANS").  
+* *source*  is the source for each indicator. This is needed for charts.  
+* *vector* is the data vector (e.g., Statistics Canada Cansim data table, Statbase vector, Haver vector, US Census Bureau data table).  
+* *dataset* is used to determine which data is pulled in the app dynamically (i.e., "cansim_auto") or updated in R (i.e., "manual").  
+
+
+## Updating the Data
+
+There are two types of data in the app:  
+
+* publicly available CANSIM data pulled on the fly from Statistics Canada  
+* all other data is updated and the app re-published
+
+
+### Step 1. Pulling TRIP and Beyond 2020 IVT data
+
+There are three sets of data that need to be updated outside of R, within their own systems: Exports data within TRIP, Indigenous Employment within Beyond 2020, and Immigrant Employment, also within Beyond 2020.
+
+
+#### Key Exports by Destination and Commodity
+
+1. Open the TRIP data application.
+2. Select the **Pandemic Indicators Report** on the **Canadian Exports tab**.
+3. Click the Run Report button.
+4. Copy and paste the tab into **TRIPexportdata.xlsx** (one folder above this R project). (The dates and general format should match exactly.)
+5. Save and close the Excel file.
+
+
+#### Indigenous & Immigrant Employment
+
+1. In the correct month and year folder of **Aboriginal LFS**, open **4ctl_abo_cow_3MMA.ivt** with Beyond 2020.
+2. Make sure the settings are for Cow: Total employment, Sex: Both sexes, Age: 15 years and over, and, Aboriginal: Aboriginal (not total).
+3. Copy and paste the British Columbia row into Beyond2020data.csv. You will have to paste the data transposed into the "Indigenous" column. Make sure the months match up.
+4. In the correct month and year folder of **Immigration LFS**, open **IMMIGRANTS_provinces_immigrant_3MMA.ivt** with Beyond 2020.
+5. Drag the Immigration total characteristic onto the rows. Make sure the other settings are for: Birth: Total, Sex: Both sexes, Char: Employment, Age: 15 Years +, Prov: British Columbia.
+6. Copy and paste the *Very recent immigrants, 5 years or less* row into **Beyond2020data.csv**  (one folder above this R project). You will have to paste the data transposed into the "Very Recent Immigrants (5 years or less)" column. Make sure the months match up.
+7. Copy and paste the *Recent immigrants, 5+ to 10 years* row into **Beyond2020data.csv**  (one folder above this R project). You will have to paste the data transposed into the "Recent Immigrants (5+ to 10 years)" column. Make sure the months match up.
+8. Save and close the csv file.
+
+
+#### Remaining data
+
+The rest of the data is pulled in through R connections in Step 2 (next):  
+
+* International Merchandise Exports (from BC Stats' website)  
+* US Housing Starts (from Statbase)  
+* Housing Starts (from Haver)  
+* Hotel Occupancy Rate (from Statbase)  
+
+
+### Step 2. Creating updated data file in R
+
+1. Double-click on **"economic_recovery_indicators.Rproj"** to open this project in RStudio.
+2. In the Files pane (usually, bottom-right), click on the app folder, then the prep_scripts folder, then the **load_data.R** script.
+3. Select all (Ctrl + A) and then run all (Ctrl + Enter). This will pull in all the required data, format it as needed, bind it together, and output two .rds files to the app's data folder.
+4. Check the app's data folder. The two files (exports_data.rds and non_cansim_data.rds) should have a new modified date. If you want, you can view the files by going to the Environment pane (usually, top-right) and clicking on the file name. The data will come up in the (usually, top-left) pane. (Scroll up and down to see more rows. Click on "Filter" (top left) and then within one or more columns to select specific rows.)
+
+
+## Updating the App
+
+Once the data is updated, the app itself needs to be re-published.
+
+![](../../Development/app_publish1.png)
+
+1. If "economic_recovery_indicators.Rproj" is not already open in RStudio, do so by double-clicking it.
+2. In the Files pane, click on the app folder, and then **app.R**. You can preview the app locally by clicking the "> Run App" button (top-right) when viewing the app.R script.
+3. Click on the blue eye icon (top-right) to re-publish the app, (when viewing the app.R script).
+4. Choose "Economic-Indicators" if it shows; otherwise, choose "Other Destination".
+5. A "Publish to Server" window will pop up. Account should be "bcstats: shinyapps.io". Title should be "Economic-Indicators". You may have to uncheck some files. Files to include are:  
+   + app.R  
+   + indicators_list.csv  
+   + data/exports.rds  
+   + data/non_cansim_data.rds  
+   + scripts/chart_theme.R  
+   + scripts/functions.R  
+   + www (a folder)  
+   + **Do NOT include the private_setup.R script.**  
+6. Click Publish. Be patient; this will take a few minutes.
+
+![](../../Development/app_publish2.png)
+
+
+## Adding or Removing Indicators
+
+If a new indicator is needed, add it with its meta-data to "indicators_list.csv" (found in the app folder).  
+
+* If it's data from Statistics Canada that can be pulled "on-the-fly", you just need to make sure the "dataset" column is set to "cansim_auto" and that the correct vector is referenced in the "vector" column. Re-publish the app.  
+* If it's data that needs to be added and updated manually (through web scraping, Statbase, Haver, Beyond 2020 ivt, csv or Excel), add the necessary R code to "load_data.R" in the app folder's prep_scripts folder. Re-run "load_data.R" if needed, then re-publish the app.  
+
+If an indicator needs to be removed, just delete its row in "indicators_list.csv" (found in the app folder).  
