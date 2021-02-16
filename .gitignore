@@ -3,6 +3,6 @@
 .RData
 .Ruserdata
 app/data*
-sandbox.R
+*sandbox.R
 *private_setup.R
 app/rsconnect*
