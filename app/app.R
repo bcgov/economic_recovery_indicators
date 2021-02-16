@@ -255,7 +255,7 @@ ui <- function(req) {
                         uiOutput(outputId = "caption")
                         )),
                         br(),
-                        # Data table of chart to go here   
+                        # Data table of chart to go here if wanted
                         br()
                ),
                type = "tabs"
@@ -280,7 +280,7 @@ ui <- function(req) {
   )
 )}
 
-## Define server logic ----
+## define server logic ----
 server <- function(input, output, session) {
   
   ## Tab 1: Key Economic Recovery Indicators ----
@@ -435,7 +435,8 @@ server <- function(input, output, session) {
             scale_color_manual(values = line_colors) +  # use specified colors (up to 4)
             bcstats_chart_theme +
             theme(legend.title = element_blank(),
-                  legend.position = "bottom")           # this isn't working
+                  legend.position = "bottom"            # this isn't working: plotly ONLY places legend right (ignores all other positions)
+                  )
        
         ## And, if CPI chart, add horizontal line at 0
         if(input$indicator == "Consumer Price Index") {
@@ -479,5 +480,5 @@ server <- function(input, output, session) {
 
 }
 
-## Knit together ui and server ----
+## knit together ui and server ----
 shinyApp(ui = ui, server = server)
