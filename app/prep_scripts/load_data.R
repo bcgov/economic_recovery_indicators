@@ -212,7 +212,7 @@ data_emp <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyo
 
 ### * bind non-cansim datasets ----
 temp <- read_csv(here::here("/app/indicators_list.csv")) %>% 
-  filter(dataset == "non_cansim") %>% select(title) %>% pull()
+  filter(dataset == "manual") %>% select(title) %>% pull()
 titles_nc <- c(rep(temp[1], dim(data_ime)[1]),
                rep(temp[2], dim(data_ushs)[1]),
                rep(temp[3], dim(data_cmhc)[1]),
