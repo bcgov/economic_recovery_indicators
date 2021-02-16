@@ -65,7 +65,7 @@ get_ytd_stats <- function(df) {
 
 format_summary_data <- function(data) {
   
-  ## Key economic recover indicators have m-o-m but no estimate
+  ## Key economic recovery indicators have m-o-m but no estimate
   if(exists("mom_val", data)){
     data %>%
       mutate(month = paste(month(ref_date, label = TRUE, abbr = TRUE), year(ref_date)),
