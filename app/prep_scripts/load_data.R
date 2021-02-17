@@ -223,6 +223,7 @@ non_cansim_data <- bind_rows(data_ime, data_ushs, data_cmhc, data_hor, data_emp)
          label = factor(label), 
          filter_var = factor(filter_var))
 
+RODBC::odbcCloseAll()
 rm(temp, titles_nc, data_ime, data_ushs, data_cmhc, data_hor, data_emp, 
    cn, DRIVE_LOCATION, PROJECT_LOCATION, months)
 
