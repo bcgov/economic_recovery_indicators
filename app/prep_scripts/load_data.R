@@ -168,20 +168,21 @@ data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints 
 ## Beyond 2020 Tables (.ivt files)
 ## this data is manually updated by opening each .ivt file for the corresponding month and year
 ##   then copying to the appropriate column in Beyond2020data.csv
+## 3MMA = Three-Month Moving Average
 
-### ** Indigenous B.C. Employment, Off-Reserve (Thousands, Three-Month Moving Average)
+### ** Indigenous B.C. Employment, Off-Reserve (Thousands, 3MMA)
 ## J:\DATA\StatCan\LABOURFORCESURVEY\Aboriginal LFS\<Year> Monthly\<YYYY-MM>\
 ##        4ctl_abo_cow_3MMA.ivt
 ## aboriginal employment, both sexes, 15 years and up data totals for BC
 ## Make sure Aboriginal data is set to aboriginal-aboriginal instead of aboriginal-total
 
 
-### ** Immigrant Employment, B.C. (Thousands, Three-Month Moving Average) – Recent immigrants
+### ** Immigrant Employment, B.C. (Thousands, 3MMA) – Recent immigrants
 ## J:\DATA\StatCan\LABOURFORCESURVEY\Immigration LFS\<Year> Monthly\<YYYY-MM>\
 ##        IMMIGRANTS_provinces_immigrant_3MMA.ivt
 
 
-### ** Immigrant Employment, B.C. (Thousands, Three-Month Moving Average) – Very recent immigrants
+### ** Immigrant Employment, B.C. (Thousands, 3MMA) – Very recent immigrants
 ## J:\DATA\StatCan\LABOURFORCESURVEY\Immigration LFS\<Year> Monthly\<YYYY-MM>\
 ##        IMMIGRANTS_provinces_immigrant_3MMA.ivt
 
@@ -199,9 +200,9 @@ data_emp <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyo
          RI = `Recent Immigrants (5+ to 10 years)`) %>%
   pivot_longer(-ref_date, names_to = "temp", values_to = "value") %>%
   ## create vars needed for app
-  mutate(title = case_when(temp == "Ind" ~ "<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, Three-Month Moving Average)",
-                           temp == "VRI" ~ "<b>Immigrant Employment, Very Recent Immigrants</b><br>(Thousands, Three-Month Moving Average)",
-                           temp == "RI" ~ "<b>Immigrant Employment, Recent Immigrants</b><br>(Thousands, Three-Month Moving Average)"),
+  mutate(title = case_when(temp == "Ind" ~ "<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, 3MMA)",
+                           temp == "VRI" ~ "<b>Immigrant Employment, Very Recent Immigrants</b><br>(Thousands, 3MMA)",
+                           temp == "RI" ~ "<b>Immigrant Employment, Recent Immigrants</b><br>(Thousands, 3MMA)"),
          label = case_when(temp == "Ind" ~ "Indigenous Employment, Off-Reserve",
                            TRUE ~ "Immigrant Employment"),
          filter_var = "chart",
