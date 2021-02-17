@@ -162,53 +162,32 @@ data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints 
   select(title, label, filter_var, ref_date, value = Value)
 
 
-### * (ivt) Indigenous & Immigrant Employment data ----
+### * (ivt) Indigenous Employment, Off-Reserve (Thousands, 3MMA) ----
 ## install: https://www.statcan.gc.ca/eng/public/beyond20-20
 ## Source: Statistics Canada (open-data license by Stats Can)
 ## Beyond 2020 Tables (.ivt files)
-## this data is manually updated by opening each .ivt file for the corresponding month and year
+## this data is manually updated by opening the .ivt file for the corresponding month and year
 ##   then copying to the appropriate column in Beyond2020data.csv
 ## 3MMA = Three-Month Moving Average
-
-### ** Indigenous B.C. Employment, Off-Reserve (Thousands, 3MMA)
 ## J:\DATA\StatCan\LABOURFORCESURVEY\Aboriginal LFS\<Year> Monthly\<YYYY-MM>\
 ##        4ctl_abo_cow_3MMA.ivt
 ## aboriginal employment, both sexes, 15 years and up data totals for BC
 ## Make sure Aboriginal data is set to aboriginal-aboriginal instead of aboriginal-total
 
-
-### ** Immigrant Employment, B.C. (Thousands, 3MMA) – Recent immigrants
-## J:\DATA\StatCan\LABOURFORCESURVEY\Immigration LFS\<Year> Monthly\<YYYY-MM>\
-##        IMMIGRANTS_provinces_immigrant_3MMA.ivt
-
-
-### ** Immigrant Employment, B.C. (Thousands, 3MMA) – Very recent immigrants
-## J:\DATA\StatCan\LABOURFORCESURVEY\Immigration LFS\<Year> Monthly\<YYYY-MM>\
-##        IMMIGRANTS_provinces_immigrant_3MMA.ivt
-
-### ** Indigenous & Immigrant Employment data
-data_emp <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyond2020data.csv")) %>%
+data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyond2020data.csv")) %>%
   ## prep for YYYY-MM-DD ref_date
   mutate(Year = paste0("20", str_sub(Month, start = 1, end = 2)),   ##Year = paste0("20", str_sub(Month, start = -2)),
          Month = str_sub(Month, start = 4)) %>%
-  ## earlier data is blank for immigrants and reads in as "-"
   filter(Year >= 2010) %>%
   left_join(months, by = "Month") %>%
-  mutate(ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d"),
-         across(where(is.numeric), as.character)) %>%
-  select(ref_date, Ind = Indigenous, VRI = `Very Recent Immigrants (5 years or less)`,
-         RI = `Recent Immigrants (5+ to 10 years)`) %>%
-  pivot_longer(-ref_date, names_to = "temp", values_to = "value") %>%
+  mutate(ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d")) %>%
   ## create vars needed for app
-  mutate(title = case_when(temp == "Ind" ~ "<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, 3MMA)",
-                           temp == "VRI" ~ "<b>Immigrant Employment, Very Recent Immigrants</b><br>(Thousands, 3MMA)",
-                           temp == "RI" ~ "<b>Immigrant Employment, Recent Immigrants</b><br>(Thousands, 3MMA)"),
-         label = case_when(temp == "Ind" ~ "Indigenous Employment, Off-Reserve",
-                           TRUE ~ "Immigrant Employment"),
+  mutate(title = "<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, 3MMA)",
+         label = "Indigenous Employment, Off-Reserve",
          filter_var = "chart",
-         value = as.numeric(value)) %>%
+         Indigenous = as.numeric(Indigenous)) %>%
   ## re-order/name columns
-  select(title, label, filter_var, ref_date, value)
+  select(title, label, filter_var, ref_date, value = Indigenous)
 
 
 ### * bind non-cansim datasets ----
@@ -218,14 +197,14 @@ titles_nc <- c(rep(temp[1], dim(data_ime)[1]),
                rep(temp[2], dim(data_ushs)[1]),
                rep(temp[3], dim(data_cmhc)[1]),
                rep(temp[4], dim(data_hor)[1]),
-               rep(c(temp[5:7]), dim(data_emp)[1]/3))
-non_cansim_data <- bind_rows(data_ime, data_ushs, data_cmhc, data_hor, data_emp) %>%
-  mutate(title = factor(x = titles_nc, levels = temp[1:7]),
+               rep(temp[5], dim(data_ind)[1]))
+non_cansim_data <- bind_rows(data_ime, data_ushs, data_cmhc, data_hor, data_ind) %>%
+  mutate(title = factor(x = titles_nc, levels = temp),
          label = factor(label), 
          filter_var = factor(filter_var))
 
 RODBC::odbcCloseAll()
-rm(temp, titles_nc, data_ime, data_ushs, data_cmhc, data_hor, data_emp, 
+rm(temp, titles_nc, data_ime, data_ushs, data_cmhc, data_hor, data_ind, 
    cn, DRIVE_LOCATION, PROJECT_LOCATION, months)
 
 
