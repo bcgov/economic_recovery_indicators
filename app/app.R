@@ -40,7 +40,7 @@ exports_stats <- exports_data %>%
   arrange(title)
 
 titles_all <- read_csv("indicators_list.csv")
-labels_all <- titles_all %>% select(label) %>% pull()
+chart_list <- titles_all %>% select(chart_list) %>% pull()
 charts_multi <- titles_all %>% group_by(order) %>% tally() %>% filter(n > 1) %>% pull(order)
 
 ## get cansim data ----
@@ -66,7 +66,7 @@ cansim_stats <- cansim_data %>%
 ## merge data ----
 all_data <- bind_rows(cansim_data, non_cansim_data) %>%
   mutate(title = factor(title, levels = unique(titles_all$title))) %>%
-  left_join(titles_all %>% select(order, title, line, source), by = "title")
+  left_join(titles_all %>% select(order, title, line, source, chart_list), by = "title")
 
 all_stats <- all_data %>%
   get_mom_stats() %>%
@@ -76,7 +76,7 @@ all_stats <- all_data %>%
 
 ## get Consumer Price Index % change Year-Over-Year ----
 cpi_yoy <- all_data %>%
-  filter(label == "Consumer Price Index") %>%
+  filter(str_detect(label, "Consumer Price Index")) %>%
   get_yoy_stats() %>%
   filter(!is.na(yoy_pct)) %>%
   mutate(title = "<b>Consumer Price Index %</b><br>Change Year-over-Year",
@@ -242,10 +242,10 @@ ui <- function(req) {
                             selectInput( ## drop-down list
                             inputId = "indicator",
                             label = NULL,
-                            choices = unique(labels_all),
-                            selected = labels_all[1],
+                            choices = str_replace_all(unique(chart_list), pattern = "<br>", replacement = " "),
+                            selected = chart_list[1],
                             selectize = FALSE,
-                            size = length(unique(labels_all)),
+                            size = length(unique(chart_list)),
                             width = "100%")
                         )),
                         column(width = 9,
@@ -388,7 +388,7 @@ server <- function(input, output, session) {
     req(input$indicator)
     
     line_chart <- all_data %>% 
-        filter(label == input$indicator)
+      filter(chart_list == input$indicator)
     
     ## tables display units, chart displays in thousands
     if(input$indicator == "Housing Starts") {
@@ -397,7 +397,7 @@ server <- function(input, output, session) {
                title = str_replace(title, pattern = "Units", replacement = "Thousands"))
     }
     ## tables display values, chart displays y-o-y
-    if(input$indicator == "Consumer Price Index") {
+    if(str_detect(input$indicator, "Consumer Price Index")) {
       line_chart <- cpi_yoy %>% 
         select(-value) %>%
         rename(value = yoy_pct)
@@ -438,7 +438,7 @@ server <- function(input, output, session) {
                   )
        
         ## And, if CPI chart, add horizontal line at 0
-        if(input$indicator == "Consumer Price Index") {
+        if(str_detect(input$indicator, "Consumer Price Index")) {
           p <- p +
             # scale_y_continuous(labels = scales::label_percent(scale = 1)) +
             geom_hline(yintercept = 0)
