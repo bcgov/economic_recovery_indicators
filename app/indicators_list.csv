@@ -16,20 +16,20 @@ order,title,label,chart_list,line,filter_var,source,vector,dataset
 11,<b>Employment Males</b>,"Employment by Sex<br>(Thousands, SA)",Employment by Sex,Males,chart,Statistics Canada,v2064710,cansim_auto
 12,"<b>Youth (15-24 yo) Employment</b><br>(Thousands, SA)",Youth (15-24 yo) Employment,Youth (15-24 yo) Employment,NA,chart,Statistics Canada,v2064728,cansim_auto
 13,"<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, 3MMA)","Indigenous Employment, Off-Reserve","Indigenous Employment, Off-Reserve",NA,chart,Statistics Canada,NA,manual
-14,"<b>Immigrant Employment, Very Recent Immigrants</b><br>(Thousands, 3MMA)",Immigrant Employment,Immigrant Employment,Very Recent Immigrants<br> 5 years or less,chart,Statistics Canada,NA,manual
-14,"<b>Immigrant Employment, Recent Immigrants</b><br>(Thousands, 3MMA)",Immigrant Employment,Immigrant Employment,Recent Immigrants<br> 5+ to 10 years,chart,Statistics Canada,NA,manual
+14,"<b>Immigrant Employment, Very Recent Immigrants</b><br>(Thousands, 3MMA)","Immigrant Employment<br>(Thousands, 3MMA)",Immigrant Employment,Very Recent Immigrants<br> 5 years or less,chart,Statistics Canada,v53037220,cansim_auto
+14,"<b>Immigrant Employment, Recent Immigrants</b><br>(Thousands, 3MMA)","Immigrant Employment<br>(Thousands, 3MMA)",Immigrant Employment,Recent Immigrants<br> 5+ to 10 years,chart,Statistics Canada,v53037240,cansim_auto
 15,"<b>Participation Rate</b><br>(%, SA)","Participation Rate<br>(%, SA)",Participation Rate,Total,bcians,Statistics Canada,v2064706,cansim_auto
 15,<b>Participation Rate Males</b>,"Participation Rate<br>(%, SA)",Participation Rate,Males,chart,Statistics Canada,v2064715,cansim_auto
 15,<b>Participation Rate Females</b>,"Participation Rate<br>(%, SA)",Participation Rate,Females,chart,Statistics Canada,v2064724,cansim_auto
 16,"<b>Unemployment Rate</b><br>(%, SA)","Unemployment Rate<br>(%, SA)",Unemployment Rate,Total,bcians,Statistics Canada,v2064705,cansim_auto
 16,"<b>Unemployment Rate</b><br>Males (%, SA)","Unemployment Rate<br>(%, SA)",Unemployment Rate,Males,chart,Statistics Canada,v2064714,cansim_auto
 16,"<b>Unemployment Rate</b><br>Females (%, SA)","Unemployment Rate<br>(%, SA)",Unemployment Rate,Females,chart,Statistics Canada,v2064723,cansim_auto
-17,<b>Unemployment Rate Youth (15-24 yo)</b>,Unemployment Rate Youth (15-24 yo),Unemployment Rate Youth (15-24 yo),NA,chart,Statistics Canada,v2064732,cansim_auto
+17,"<b>Youth (15-24 yo) Unemployment Rate</b><br>(%, SA)",Youth (15-24 yo) Unemployment Rate,Youth (15-24 yo) Unemployment Rate,NA,chart,Statistics Canada,v2064732,cansim_auto
 18,"<b>Average Hourly Wage Earnings</b><br>($, NSA)",Average Hourly Wage Earnings,Average Hourly Wage Earnings,NA,bcians,Statistics Canada,v1593420,cansim_auto
 19,"<b>Employment Insurance Beneficiaries (1)</b><br>(Persons, NSA)",Employment Insurance Beneficiaries,Employment Insurance Beneficiaries,NA,bcians,Statistics Canada,v64540928,cansim_auto
-20,<b>Employment Insurance Beneficiaries Males</b>,"Employment Insurance Beneficiaries by Sex<br>(Persons, NSA)",Employment Insurance Beneficiaries by Sex,Males,chart,Statistics Canada,v64542176,cansim_auto
-20,<b>Employment Insurance Beneficiaries Females</b>,"Employment Insurance Beneficiaries by Sex<br>(Persons, NSA)",Employment Insurance Beneficiaries by Sex,Females,chart,Statistics Canada,v64543328,cansim_auto
-21,<b>Employment Insurance Beneficiaries Youth (15-24 yo)</b>,Employment Insurance Beneficiaries Youth (15-24 yo),Employment Insurance Beneficiaries Youth (15-24 yo),NA,chart,Statistics Canada,v64541136,cansim_auto
-22,"<b>Consumer Price Index</b><br>(All Items, NSA)","Consumer Price Index<br>(All Items, NSA)",Consumer Price Index,All Items,bcians,BC Stats calculations using Statistics Canada,v41692462,cansim_auto
-22,"<b>Consumer Price Index</b><br>(Food, NSA)","Consumer Price Index<br>(All Items, NSA)",Consumer Price Index,Food,chart,BC Stats calculations using Statistics Canada,v41692463,cansim_auto
-22,"<b>Consumer Price Index</b><br>(Shelter, NSA)","Consumer Price Index<br>(All Items, NSA)",Consumer Price Index,Shelter,chart,BC Stats calculations using Statistics Canada,v41692495,cansim_auto
+20,<b>Employment Insurance Beneficiaries (1) Males</b>,"Employment Insurance Beneficiaries by Sex (1)<br>(Persons, NSA)",Employment Insurance Beneficiaries by Sex (1),Males,chart,Statistics Canada,v64542176,cansim_auto
+20,<b>Employment Insurance Beneficiaries (1) Females</b>,"Employment Insurance Beneficiaries by Sex (1)<br>(Persons, NSA)",Employment Insurance Beneficiaries by Sex (1),Females,chart,Statistics Canada,v64543328,cansim_auto
+21,"<b>Employment Insurance Beneficiaries Youth (15-24 yo) (1)</b><br>(Persons, NSA)",Employment Insurance Beneficiaries Youth (15-24 yo) (1),Employment Insurance Beneficiaries Youth (15-24 yo) (1),NA,chart,Statistics Canada,v64541136,cansim_auto
+22,"<b>Consumer Price Index</b><br>(All Items, NSA)","Consumer Price Index<br>(All Items, NSA)",Consumer Price Index,All Items,bcians,"BC Stats, Statistics Canada Table",v41692462,cansim_auto
+22,"<b>Consumer Price Index</b><br>(Food, NSA)","Consumer Price Index<br>(All Items, NSA)",Consumer Price Index,Food,chart,"BC Stats, Statistics Canada Table",v41692463,cansim_auto
+22,"<b>Consumer Price Index</b><br>(Shelter, NSA)","Consumer Price Index<br>(All Items, NSA)",Consumer Price Index,Shelter,chart,"BC Stats, Statistics Canada Table",v41692495,cansim_auto
