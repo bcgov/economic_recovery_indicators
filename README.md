@@ -9,7 +9,7 @@ economic\_recovery\_indicators
 
 ### Usage
 
-To create a shiny app to display Key Economic Recovery Indicators
+To create a shiny app to display Key Economic Recovery Indicators. The **British Columbia - Economic Recovery Indicators** report began in September 2020 as a bi-weekly PDF report that provides readers a view of select data relevant for monitoring the impacts of COVID-19 in BC and exploring key economic trends as the COVID-19 situation evolves. It was transitioned to an online shiny application (<https://bcstats.shinyapps.io/Economic-Indicators/>) as of February 22, 2021, along with monthly PDF reports.
 
 ### Project Status
 

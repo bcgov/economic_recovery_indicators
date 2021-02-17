@@ -255,7 +255,7 @@ ui <- function(req) {
                         uiOutput(outputId = "caption")
                         )),
                         br(),
-                        # Data table of chart to go here   
+                        # Data table of chart to go here if wanted
                         br()
                ),
                type = "tabs"
@@ -280,14 +280,14 @@ ui <- function(req) {
   )
 )}
 
-## Define server logic ----
+## define server logic ----
 server <- function(input, output, session) {
   
   ## Tab 1: Key Economic Recovery Indicators ----
   
   output$ERI_overall <- DT::renderDataTable({
     
-    data <- all_stats %>%  #cansim_stats %>%
+    data <- all_stats %>%
       filter(filter_var == "overall") %>%
       format_summary_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:4)),
@@ -298,7 +298,7 @@ server <- function(input, output, session) {
   
   output$ERI_businesses <- DT::renderDataTable({
     
-    data <- all_stats %>%  #cansim_stats %>%
+    data <- all_stats %>%
       filter(filter_var == "businesses") %>%
       format_summary_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:4)),
@@ -309,7 +309,7 @@ server <- function(input, output, session) {
   
   output$ERI_bcians <- DT::renderDataTable({
     
-    data <- all_stats %>%  #cansim_stats %>%
+    data <- all_stats %>%
       filter(filter_var == "bcians") %>%
       format_summary_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:4)),
@@ -340,7 +340,7 @@ server <- function(input, output, session) {
     data <- exports_stats %>%
       filter(destination == "World") %>%
       format_summary_data() %>%
-      mutate(INDICATOR = str_replace(INDICATOR, pattern = "World" , replacement = "ALL")) %>%
+      mutate(INDICATOR = str_replace(INDICATOR, pattern = "World", replacement = "ALL")) %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:4)),
                                sDom = 't'), ## to remove filtering, pagination, etc. http://legacy.datatables.net/usage/options
                 rownames = FALSE, escape = FALSE, filter = "none")
@@ -351,7 +351,7 @@ server <- function(input, output, session) {
   
   output$DET_overall <- DT::renderDataTable({
     
-    data <- all_stats %>%  #cansim_stats %>%
+    data <- all_stats %>%
       filter(filter_var == "overall") %>%
       format_detailed_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:8)),
@@ -362,7 +362,7 @@ server <- function(input, output, session) {
   
   output$DET_businesses <- DT::renderDataTable({
     
-    data <- all_stats %>%  #cansim_stats %>%
+    data <- all_stats %>%
       filter(filter_var == "businesses") %>%
       format_detailed_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:8)),
@@ -373,7 +373,7 @@ server <- function(input, output, session) {
   
   output$DET_bcians <- DT::renderDataTable({
     
-    data <- all_stats %>%  #cansim_stats %>%
+    data <- all_stats %>%
       filter(filter_var == "bcians") %>%
       format_detailed_data() %>%
       datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = 2:8)),
@@ -421,8 +421,7 @@ server <- function(input, output, session) {
                                 max(get_data()$line_chart$ref_date) + months(3)),
                      expand = c(0,0),
                      date_breaks = "6 months",
-                     date_labels = "%b %Y")
-                     # date_labels = "%b\n%Y")
+                     date_labels = "%b %Y")             # OLD: date_labels = "%b\n%Y")
       
       ## multi-line charts need geom_line colored by line, with no-title legend
       if(any(get_data()$line_chart$order %in% charts_multi)) {
@@ -435,7 +434,8 @@ server <- function(input, output, session) {
             scale_color_manual(values = line_colors) +  # use specified colors (up to 4)
             bcstats_chart_theme +
             theme(legend.title = element_blank(),
-                  legend.position = "bottom")           # this isn't working
+                  legend.position = "bottom"            # this isn't working: plotly ONLY places legend right (ignores all other positions)
+                  )
        
         ## And, if CPI chart, add horizontal line at 0
         if(input$indicator == "Consumer Price Index") {
@@ -479,5 +479,5 @@ server <- function(input, output, session) {
 
 }
 
-## Knit together ui and server ----
+## knit together ui and server ----
 shinyApp(ui = ui, server = server)

@@ -1,23 +1,23 @@
 order,title,label,line,filter_var,source,vector,dataset
-1,"<b>International Merchandise Exports</b><br>($Thousands, SA)",International Merchandise Exports,NA,overall,BC Stats,NA,non_cansim
+1,"<b>International Merchandise Exports</b><br>($Thousands, SA)",International Merchandise Exports,NA,overall,BC Stats,NA,manual
 2,"<b>Non-Residential Building Permits</b><br>($Thousands, SA)",Non-Residential Building Permits,Total Non-Residential,overall,Statistics Canada,v121514675,cansim_auto
 2,<b>Non-Residential Building Permits Industrial</b>,Non-Residential Building Permits,Industrial,chart,Statistics Canada,v121515395,cansim_auto
 2,<b>Non-Residential Building Permits Commercial</b>,Non-Residential Building Permits,Commercial,chart,Statistics Canada,v121518515,cansim_auto
 2,<b>Non-Residential Building Permits Institutional and Governmental</b>,Non-Residential Building Permits,Institutional and Governmental,chart,Statistics Canada,v121524275,cansim_auto
-3,"<b>US Housing Starts</b><br>(Thousands, SAAR)",US Housing Starts,NA,overall,US Census Bureau,v122103,non_cansim
+3,"<b>US Housing Starts</b><br>(Thousands, SAAR)",US Housing Starts,NA,overall,US Census Bureau,v122103,manual
 4,"<b>Manufacturing Sales</b><br>($Thousands, SA)",Manufacturing Sales,NA,businesses,Statistics Canada,v807928,cansim_auto
 5,"<b>Retail Trade</b><br>($Thousands, SA)",Retail Trade,NA,businesses,Statistics Canada,v52367245,cansim_auto
-6,"<b>Housing Starts</b><br>(Units, SAAR)",Housing Starts,NA,businesses,Statistics Canada/Haver Analytics,gm00013,non_cansim
+6,"<b>Housing Starts</b><br>(Units, SAAR)",Housing Starts,NA,businesses,Statistics Canada/Haver Analytics,gm00013,manual
 7,"<b>Food Services and Drinking Places</b><br>($Thousands, SA)",Food Services and Drinking Places,NA,businesses,Statistics Canada,v42170715,cansim_auto
 8,"<b>Visitor Entries</b><br>(Persons, SA)",Visitor Entries,NA,businesses,Statistics Canada,v32214475,cansim_auto
-9,"<b>Hotel Occupancy Rate</b><br>(%, NSA)",Hotel Occupancy Rate,NA,businesses,CBRE Hotels' Trends,C40,non_cansim
+9,"<b>Hotel Occupancy Rate</b><br>(%, NSA)",Hotel Occupancy Rate,NA,businesses,CBRE Hotels' Trends,C40,manual
 10,"<b>Employment</b><br>(Thousands, SA)",Employment,NA,bcians,Statistics Canada,v2057793,cansim_auto
 11,<b>Employment Females</b>,Employment by Sex,Females,chart,Statistics Canada,v2064719,cansim_auto
 11,<b>Employment Males</b>,Employment by Sex,Males,chart,Statistics Canada,v2064710,cansim_auto
 12,"<b>B.C. Employment Youth, 15-24 years of age</b><br>(Thousands, SA)","B.C. Employment Youth, 15-24 years of age",NA,chart,Statistics Canada,v2064728,cansim_auto
-13,"<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, Three-Month Moving Average)","Indigenous Employment, Off-Reserve",NA,chart,Statistics Canada,NA,non_cansim
-14,"<b>Immigrant Employment, Very Recent Immigrants</b><br>(Thousands, Three-Month Moving Average)",Immigrant Employment,Very Recent Immigrants<br> 5 years or less,chart,Statistics Canada,NA,non_cansim
-14,"<b>Immigrant Employment, Recent Immigrants</b><br>(Thousands, Three-Month Moving Average)",Immigrant Employment,Recent Immigrants<br> 5+ to 10 years,chart,Statistics Canada,NA,non_cansim
+13,"<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, Three-Month Moving Average)","Indigenous Employment, Off-Reserve",NA,chart,Statistics Canada,NA,manual
+14,"<b>Immigrant Employment, Very Recent Immigrants</b><br>(Thousands, Three-Month Moving Average)",Immigrant Employment,Very Recent Immigrants<br> 5 years or less,chart,Statistics Canada,NA,manual
+14,"<b>Immigrant Employment, Recent Immigrants</b><br>(Thousands, Three-Month Moving Average)",Immigrant Employment,Recent Immigrants<br> 5+ to 10 years,chart,Statistics Canada,NA,manual
 15,"<b>Participation Rate</b><br>(%, SA)",Participation Rate,Total,bcians,Statistics Canada,v2064706,cansim_auto
 15,<b>Participation Rate Males</b>,Participation Rate,Males,chart,Statistics Canada,v2064715,cansim_auto
 15,<b>Participation Rate Females</b>,Participation Rate,Females,chart,Statistics Canada,v2064724,cansim_auto
