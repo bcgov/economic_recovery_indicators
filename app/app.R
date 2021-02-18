@@ -119,6 +119,26 @@ ui <- function(req) {
                ## Summary ----
                tabPanel("Summary",
                         value = 1,
+                        ## About column
+                        column(width = 3, 
+                               tags$fieldset(
+                                 tags$legend(h3("About")),
+                                 "Through the drop-down list to the right, you may choose Summary Type 
+                                 (i.e., Economic Recovery Indicators, Exports by Destination and Commodity, 
+                                 or Exports by Commodity).",br(),br(),
+                                 "Above, the Detailed Summary tab provides the estimate and change 
+                                 month-over-month, year-over-year, and year-to-date for the key economic 
+                                 recovery indicators, while the Charts tab displays monthly results from 2010.",
+                                 br(),br(),
+                                 "Throughout this dashboard, data is referenced in the following ways:",br(),
+                                 # h3("SA"),"SA refers to data that has been seasonally adjusted",br(),
+                                 strong("SA:"),"seasonally adjusted",br(),
+                                 strong("NSA:"),"not seasonally adjusted",br(),
+                                 strong("SAAR:"),"seasonally adjusted at annual rates",br(),
+                                 strong("3MMA:"),"three-month moving average"
+                               )),
+                        ## Data tables
+                        column(width = 9,
                         tags$fieldset(
                           tags$legend(h3("Summary Type")),
                           selectInput(
@@ -196,6 +216,7 @@ ui <- function(req) {
                                            tags$a('https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data')),
                                          br()
                         )
+                       )
                        ),
                ## Detailed Summary ----
                tabPanel("Detailed Summary",
