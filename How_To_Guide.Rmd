@@ -21,6 +21,7 @@ In this project's app folder, the **indicators_list.csv** contains the meta-data
 * *order* determines the charts order. A number entered multiple times indicates a multi-line chart (e.g., "2" is listed 4 times - once for each line in the Non-Residential Building Permits chart).  
 * *title* is the html-formatted title of each indicator. This is what shows in the tables and most charts, and is what is used to create month-over-month, year-over-year, and year-to-date stats. 
 * *label* is the non-formatted title of each indicator. It is the title for the multi-line charts.  
+* *chart_list* is the non-formatted version of label and is used for the drop-down list to choose a chart.
 * *line* is the legend entry for multi-line charts. All other charts are "NA".  
 * *filter_var* is used to determine which box the indicator belongs to (i.e., "OVERALL ECONOMY", "BUSINESSES", or "BRITISH COLUMBIANS").  
 * *source*  is the source for each indicator. This is needed for charts.  
@@ -38,7 +39,7 @@ There are two types of data in the app:
 
 ### Step 1. Pulling TRIP and Beyond 2020 IVT data
 
-There are three sets of data that need to be updated outside of R, within their own systems: Exports data within TRIP, Indigenous Employment within Beyond 2020, and Immigrant Employment, also within Beyond 2020.
+There are two sets of data that need to be updated outside of R, within their own systems: Exports data within TRIP and Indigenous Employment within Beyond 2020.
 
 
 #### Key Exports by Destination and Commodity
@@ -50,21 +51,17 @@ There are three sets of data that need to be updated outside of R, within their 
 5. Save and close the Excel file.
 
 
-#### Indigenous & Immigrant Employment
+#### Indigenous Employment
 
 1. In the correct month and year folder of **Aboriginal LFS**, open **4ctl_abo_cow_3MMA.ivt** with Beyond 2020.
 2. Make sure the settings are for Cow: Total employment, Sex: Both sexes, Age: 15 years and over, and, Aboriginal: Aboriginal (not total).
 3. Copy and paste the British Columbia row into Beyond2020data.csv. You will have to paste the data transposed into the "Indigenous" column. Make sure the months match up.
-4. In the correct month and year folder of **Immigration LFS**, open **IMMIGRANTS_provinces_immigrant_3MMA.ivt** with Beyond 2020.
-5. Drag the Immigration total characteristic onto the rows. Make sure the other settings are for: Birth: Total, Sex: Both sexes, Char: Employment, Age: 15 Years +, Prov: British Columbia.
-6. Copy and paste the *Very recent immigrants, 5 years or less* row into **Beyond2020data.csv**  (one folder above this R project). You will have to paste the data transposed into the "Very Recent Immigrants (5 years or less)" column. Make sure the months match up.
-7. Copy and paste the *Recent immigrants, 5+ to 10 years* row into **Beyond2020data.csv**  (one folder above this R project). You will have to paste the data transposed into the "Recent Immigrants (5+ to 10 years)" column. Make sure the months match up.
-8. Save and close the csv file.
+4. Save and close the csv file.
 
 
 #### Remaining data
 
-The rest of the data is pulled in through R connections in Step 2 (next):  
+The rest of the "manual" data is pulled in through R connections in Step 2 (next):  
 
 * International Merchandise Exports (from BC Stats' website)  
 * US Housing Starts (from Statbase)  
@@ -79,8 +76,13 @@ The rest of the data is pulled in through R connections in Step 2 (next):
 3. Select all (Ctrl + A) and then run all (Ctrl + Enter). This will pull in all the required data, format it as needed, bind it together, and output two .rds files to the app's data folder.
 4. Check the app's data folder. The two files (exports_data.rds and non_cansim_data.rds) should have a new modified date. If you want, you can view the files by going to the Environment pane (usually, top-right) and clicking on the file name. The data will come up in the (usually, top-left) pane. (Scroll up and down to see more rows. Click on "Filter" (top left) and then within one or more columns to select specific rows.)
 
+*Note*: Three values have been pre-set for this project. If any change, the **app/prep_scripts/private_setup.R** script must be changed accordingly. Specifically, this file sets the:  
+* project location (i.e., the project number and name which will likely change every fiscal year)  
+* drive location (i.e., the J drive "PROJECTS" folder location, which will likely NOT change)  
+* statbase connection (which includes the user id and password, which is why this file should NEVER be pushed to github or published along with the app)  
 
-## Updating the App
+
+## Updating the App[^1]
 
 Once the data is updated, the app itself needs to be re-published.
 
@@ -88,7 +90,7 @@ Once the data is updated, the app itself needs to be re-published.
 
 1. If "economic_recovery_indicators.Rproj" is not already open in RStudio, do so by double-clicking it.
 2. In the Files pane, click on the app folder, and then **app.R**. You can preview the app locally by clicking the "> Run App" button (top-right) when viewing the app.R script.
-3. Click on the blue eye icon (top-right) to re-publish the app, (when viewing the app.R script).
+3. While viewing the app.R script, click on the blue eye icon (top-right) to re-publish the app.
 4. Choose "Economic-Indicators" if it shows; otherwise, choose "Other Destination".
 5. A "Publish to Server" window will pop up. Account should be "bcstats: shinyapps.io". Title should be "Economic-Indicators". You may have to uncheck some files. Files to include are:  
    + app.R  
@@ -103,6 +105,7 @@ Once the data is updated, the app itself needs to be re-published.
 
 ![](../../Development/app_publish2.png)
 
+[^1]: If you have never published an app before, you likely need to connect your R to the BC Stats shiny account. First, login to your shiny account (https://www.shinyapps.io/ login or Dashboard option at upper right). Click on Account (on left navigation sidebar) and then choose Tokens. Click the Show button. Click "Show secret", then "Copy to clipboard". OK. Back in RStudio, you'll have to install R's package "rsconnect" if you haven't already. Then, click on the Tools menu and choose Global Options. Then, choose Publishing (on left). Click on the Connect button and choose the ShinyApps.io option. Paste into the box your shown secret token from the clipboard and click the Connect Account button.
 
 ## Adding or Removing Indicators
 
