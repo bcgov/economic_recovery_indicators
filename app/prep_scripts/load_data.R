@@ -14,6 +14,7 @@ if (!require(RODBC)) install.packages("RODBC"); library(RODBC)  ## needed for st
 ## get statbase connection and folder locations
 source("app/prep_scripts/private_setup.R")
 
+
 ## months conversion
 months <- data.frame(Month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
                              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
@@ -191,7 +192,7 @@ data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyo
 
 
 ### * bind non-cansim datasets ----
-temp <- read_csv(here::here("/app/indicators_list.csv")) %>% 
+temp <- read_csv(here::here("app", "indicators_list.csv")) %>%
   filter(dataset == "manual") %>% select(title) %>% pull()
 titles_nc <- c(rep(temp[1], dim(data_ime)[1]),
                rep(temp[2], dim(data_ushs)[1]),
@@ -209,5 +210,6 @@ rm(temp, titles_nc, data_ime, data_ushs, data_cmhc, data_hor, data_ind,
 
 
 #### save datasets ----
-saveRDS(data_trip, here::here("/app/data/exports_data.rds"))
-saveRDS(non_cansim_data, here::here("/app/data/non_cansim_data.rds"))
+saveRDS(data_trip, here::here("app", "data", "exports_data.rds"))
+saveRDS(non_cansim_data, here::here("app", "data", "non_cansim_data.rds"))
+
