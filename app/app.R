@@ -19,6 +19,10 @@ library(purrr)
 
 options(scipen = 999999999)  ## so chart axes read properly
 
+## set exports data source ----
+source_exports <- "BC Stats using data supplied by Statistics Canada"
+
+
 ## chart theme/functions ----
 source("scripts/chart_theme.R")
 source("scripts/functions.R")
@@ -42,6 +46,7 @@ exports_stats <- exports_data %>%
 titles_all <- read_csv("indicators_list.csv")
 chart_list <- titles_all %>% select(chart_list) %>% pull()
 charts_multi <- titles_all %>% group_by(order) %>% tally() %>% filter(n > 1) %>% pull(order)
+
 
 ## get cansim data ----
 titles <- titles_all %>% filter(dataset == "cansim_auto") %>% select(-dataset)
@@ -85,8 +90,9 @@ data_main <- all_data %>%
 
 # * exports data
 data_exp <- exports_data %>% 
-  mutate(Source = "BC Stats using data supplied by Statistics Canada") %>%
-  select(Destination = destination, Commodity = commodity, Date = ref_date, Value = value, Source)
+  mutate(Source = source_exports) %>%
+  select(Destination = destination, Commodity = commodity, Date = ref_date, Value = value, Source) #%>%
+  # filter(str_sub(Date, start = 1, end = 4) >= 2010)
 
 
 ## get Consumer Price Index % change Year-Over-Year ----
@@ -140,7 +146,8 @@ ui <- function(req) {
                                  tags$legend(h3("About")),
                                  "Through the drop-down list to the right, you may choose Summary Type 
                                  (i.e., Economic Recovery Indicators, Exports by Destination and Commodity, 
-                                 or Exports by Commodity).",br(),br(),
+                                 or Exports by Commodity).",
+                                 br(),br(),
                                  "Above, the Detailed Summary tab provides the estimate and change 
                                  month-over-month, year-over-year, and year-to-date for the key economic 
                                  recovery indicators, while the Charts tab displays monthly results from 2010.",
@@ -148,9 +155,8 @@ ui <- function(req) {
                                  selectInput("dataset", "Choose a dataset to download:",
                                              choices = c("Economic Recovery Indicators", "Exports")),
                                  downloadButton("downloadData", "Download Data"),br(),br(),br(),
-                                 strong("Glossary"),br(),
+                                 h4("Glossary"),br(),
                                  "Throughout this dashboard, data is referenced in the following ways:",br(),
-                                 # h3("SA"),"SA refers to data that has been seasonally adjusted",br(),
                                  strong("SA:"),"seasonally adjusted",br(),
                                  strong("NSA:"),"not seasonally adjusted",br(),
                                  strong("SAAR:"),"seasonally adjusted at annual rates",br(),
@@ -207,12 +213,11 @@ ui <- function(req) {
                                          tags$div(
                                            style="margin-left:15px",
                                            'Note: Trends for latest reporting month compared to previous month are not available since data 
-                                           are not seasonally adjusted.'),
-                                         br(),
-                                         tags$div(
-                                           style="margin-left:15px",
-                                           "For more information on other commodities or countries visit: ", 
-                                           tags$a('https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data')),
+                                           are not seasonally adjusted.',br(),
+                                           'Source: ', source_exports,br(),
+                                           'For more information on other commodities or countries visit: ', 
+                                           tags$a('https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data')
+                                         ),
                                          br()
                         ),
                         conditionalPanel(condition = "input.summary_type == 'Exports by Commodity'",
@@ -227,11 +232,9 @@ ui <- function(req) {
                                          tags$div(
                                            style="margin-left:15px",
                                            'Note: Trends for latest reporting month compared to previous month are not available since data 
-                                           are not seasonally adjusted.'),
-                                           br(),
-                                         tags$div(
-                                           style="margin-left:15px",
-                                           "For more information on other commodities or countries visit: ", 
+                                           are not seasonally adjusted.',br(),
+                                           'Source: ', source_exports,br(),
+                                           'For more information on other commodities or countries visit: ', 
                                            tags$a('https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data')),
                                          br()
                         )
@@ -306,8 +309,28 @@ ui <- function(req) {
                         br(),
                         tags$div(
                           style="margin-left:15px;margin-bottom:20px",
-                          h3("Data Sources")),
-                        br()
+                          h3("Data Sources & Permissions")
+                          ),
+                        tags$div(
+                          style="margin-left:15px",
+                          'The data in the Economic Recovery Indicators are drawn from a variety of 
+                             sources; the sources are shown in the table below, and on the Charts tab.',
+                          br(),br(),h4("Statistics Canada"),
+                          'Data from Statistics Canada is provided under the Statistics Canada Open License ',
+                          tags$a('(https://www.statcan.gc.ca/eng/reference/licence)'), '.',
+                          br(),br(),h4("British Columbia (BC Stats)"),
+                          'Data from BC Stats is provided under the Open Government Licence - British Columbia ',
+                          tags$a('(https://www2.gov.bc.ca/gov/content/data/open-data/open-government-licence-bc)'), '.',
+                          br(),br(),h4("US Census Bureau"),
+                          'Data from the US Census Bureau is provided as open data ',
+                          tags$a('(https://www.census.gov/about/policies/open-gov/open-data.html)'), '.',
+                          br(),br(),h4("CBRE Limited"),
+                          'Data from CBRE Limited ("CBRE) permitted subject to CBRE Limited Disclaimer / Terms of Use ',
+                          tags$a('(https://www.cbre.ca/en/real-estate-services/business-lines/valuation-and-advisory-services/hotels-valuation-and-advisory-services/disclaimer)'), '.',
+                          br(),br(),
+                          DT::dataTableOutput("sources_list")
+                          ),
+                        br(),
                ),
                type = "tabs"
              ),
@@ -401,14 +424,14 @@ server <- function(input, output, session) {
   
   ## Tab 1: Data Download ----
   
-  # Reactive value for selected dataset to download ----
+  # Reactive value for selected dataset to download
   datasetInput <- reactive({
     switch(input$dataset,
            "Economic Recovery Indicators" = data_main,
            "Exports" = data_exp)
   })
   
-  # Downloadable csv of selected dataset to download ----
+  # Downloadable csv of selected dataset to download
   output$downloadData <- downloadHandler(
     filename = function() {
       paste0(str_replace_all(input$dataset, " ", "_"), "_", Sys.Date(), ".csv")
@@ -548,6 +571,18 @@ server <- function(input, output, session) {
     
   })
 
+  ## Tab 4: Data Sources ----
+  
+  output$sources_list <- DT::renderDataTable({
+    
+    sources_list <- titles_all %>% 
+      select(Indicator = title, Source = source) %>%
+      mutate(Indicator = str_replace_all(Indicator, pattern = "<b>", " "),
+             Indicator = str_replace_all(Indicator, pattern = "</b>", " "),
+             Indicator = str_replace_all(Indicator, pattern = "<br>", " ")) %>%
+      add_row(Indicator = "Exports by (Destination and) Commodity", Source = source_exports, .before = 1)
+    
+  })
 }
 
 ## knit together ui and server ----
