@@ -74,6 +74,21 @@ all_stats <- all_data %>%
   get_ytd_stats() %>%
   arrange(title)
 
+## downloadable data ----
+
+# * main data
+data_main <- all_data %>%
+  mutate(Indicator = str_replace_all(title, pattern = "<b>", ""),
+         Indicator = str_replace_all(Indicator, pattern = "</b>", ""),
+         Indicator = str_replace_all(Indicator, "<br>", " ")) %>%
+  select(Indicator, Data = ref_date, Value = value, Source = source)
+
+# * exports data
+data_exp <- exports_data %>% 
+  mutate(Source = "BC Stats using data supplied by Statistics Canada") %>%
+  select(Destination = destination, Commodity = commodity, Date = ref_date, Value = value, Source)
+
+
 ## get Consumer Price Index % change Year-Over-Year ----
 cpi_yoy <- all_data %>%
   filter(str_detect(label, "Consumer Price Index")) %>%
@@ -130,6 +145,10 @@ ui <- function(req) {
                                  month-over-month, year-over-year, and year-to-date for the key economic 
                                  recovery indicators, while the Charts tab displays monthly results from 2010.",
                                  br(),br(),
+                                 selectInput("dataset", "Choose a dataset to download:",
+                                             choices = c("Economic Recovery Indicators", "Exports")),
+                                 downloadButton("downloadData", "Download Data"),br(),br(),br(),
+                                 strong("Glossary"),br(),
                                  "Throughout this dashboard, data is referenced in the following ways:",br(),
                                  # h3("SA"),"SA refers to data that has been seasonally adjusted",br(),
                                  strong("SA:"),"seasonally adjusted",br(),
@@ -225,7 +244,8 @@ ui <- function(req) {
                         br(),
                         tags$div(
                           style="margin-left:15px;margin-bottom:20px",
-                          h3("B.C. Detailed Summary - Key Economic Recovery Indicators")),
+                          h3("B.C. Detailed Summary - Key Economic Recovery Indicators")
+                          ),
                         box(title = "OVERALL ECONOMY", status = "primary",
                             solidHeader = TRUE, width = 12, collapsible = TRUE, collapsed = FALSE,
                             DT::dataTableOutput("DET_overall")
@@ -279,8 +299,19 @@ ui <- function(req) {
                         # Data table of chart to go here if wanted
                         br()
                ),
+               ## Data Sources ----
+               tabPanel("Data Sources",
+                        value = 4,
+                        # style="background-color:#F2F2F2",
+                        br(),
+                        tags$div(
+                          style="margin-left:15px;margin-bottom:20px",
+                          h3("Data Sources")),
+                        br()
+               ),
                type = "tabs"
-             )
+             ),
+
     ), ## End of column to make changes to
     column(width = 12,
            style = "background-color:#003366; border-top:2px solid #fcba19;",
@@ -367,6 +398,25 @@ server <- function(input, output, session) {
                 rownames = FALSE, escape = FALSE, filter = "none")
     
   })
+  
+  ## Tab 1: Data Download ----
+  
+  # Reactive value for selected dataset to download ----
+  datasetInput <- reactive({
+    switch(input$dataset,
+           "Economic Recovery Indicators" = data_main,
+           "Exports" = data_exp)
+  })
+  
+  # Downloadable csv of selected dataset to download ----
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste0(str_replace_all(input$dataset, " ", "_"), "_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      write.csv(datasetInput(), file, row.names = FALSE)
+    }
+  )
   
   ## Tab 2: Detailed Summary ----
   
