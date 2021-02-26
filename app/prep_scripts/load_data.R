@@ -73,7 +73,7 @@ data_trip <- openxlsx::readWorkbook(xlsxFile = paste0(DRIVE_LOCATION, PROJECT_LO
                                    "Other Asia_Natural Gas", "Other Asia_Coal",
                                    "World_All", "World_Lumber", "World_Pulp", "World_Copper",
                                    "World_Aluminum", "World_Natural Gas", "World_Coal"))) %>%
-  filter(title != "World_All") %>%
+  dplyr::filter(title != "World_All") %>%
   arrange(title) %>%
   select(title, INDICATOR, ref_date, destination, commodity, value)
 
@@ -85,7 +85,7 @@ data_trip <- openxlsx::readWorkbook(xlsxFile = paste0(DRIVE_LOCATION, PROJECT_LO
 ## monthly sa (seasonally adjusted) data file
 data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov/data/statistics/business-industry-trade/trade/seasonally_adjusted_exports.xlsx",
                                    startRow = 2) %>%
-  filter(str_detect(Month, pattern = "Source", negate = TRUE)) %>%
+  dplyr::filter(str_detect(Month, pattern = "Source", negate = TRUE)) %>%
   ## prep for YYYY-MM-DD ref_date
   mutate(Year = case_when(str_detect(Month, "'") ~ str_sub(Month, start = -2), TRUE ~ NA_character_)) %>%
   fill(Year) %>%
@@ -179,7 +179,7 @@ data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyo
   ## prep for YYYY-MM-DD ref_date
   mutate(Year = paste0("20", str_sub(Month, start = 1, end = 2)),   ##Year = paste0("20", str_sub(Month, start = -2)),
          Month = str_sub(Month, start = 4)) %>%
-  filter(Year >= 2010) %>%
+  dplyr::filter(Year >= 2010) %>%
   left_join(months, by = "Month") %>%
   mutate(ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d")) %>%
   ## create vars needed for app
@@ -193,7 +193,7 @@ data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyo
 
 ### * bind non-cansim datasets ----
 temp <- read_csv(here::here("app", "indicators_list.csv")) %>%
-  filter(dataset == "manual") %>% select(title) %>% pull()
+  dplyr::filter(dataset == "manual") %>% select(title) %>% pull()
 titles_nc <- c(rep(temp[1], dim(data_ime)[1]),
                rep(temp[2], dim(data_ushs)[1]),
                rep(temp[3], dim(data_cmhc)[1]),

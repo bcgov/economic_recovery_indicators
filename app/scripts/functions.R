@@ -5,9 +5,9 @@ get_mom_stats <- function(df) {
   df %>%
     group_by(title) %>%
     arrange(ref_date) %>%
-    mutate(mom_val = lag(value),
-           mom_chg = (value - lag(value, n = 1)),
-           mom_pct = ((value / lag(value, n = 1)) - 1) * 100) %>%
+    mutate(mom_val = dplyr::lag(value),
+           mom_chg = (value - dplyr::lag(value, n = 1)),
+           mom_pct = ((value / dplyr::lag(value, n = 1)) - 1) * 100) %>%
     ungroup()
 }
 
@@ -16,9 +16,9 @@ get_yoy_stats <- function(df) {
   df %>%
     group_by(title) %>%
     arrange(ref_date) %>%
-    mutate(yoy_val = lag(value, n = 12),
-           yoy_chg = (value - lag(value, n = 12)),
-           yoy_pct = ((value / lag(value, n = 12)) - 1) * 100) %>%
+    mutate(yoy_val = dplyr::lag(value, n = 12),
+           yoy_chg = (value - dplyr::lag(value, n = 12)),
+           yoy_pct = ((value / dplyr::lag(value, n = 12)) - 1) * 100) %>%
     ungroup()
     
 }
@@ -32,11 +32,11 @@ get_ytd_stats <- function(df) {
     
     if(any(str_detect(df_data$title2, "%"), str_detect(df_data$title2, "Employment"), str_detect(df_data$title2, "Average"))) {
       curr_ytd_val <- (zoo::rollsumr(df_data$value, month(df_data$ref_date) %>% tail(1)) %>% tail(1)) / month(df_data$ref_date) %>% tail(1)
-      prev_ytd_val <- (zoo::rollsumr(lag(df_data$value, 12), month(df_data$ref_date) %>% tail(1)) %>% tail(1)) / month(df_data$ref_date) %>% tail(1)
+      prev_ytd_val <- (zoo::rollsumr(dplyr::lag(df_data$value, 12), month(df_data$ref_date) %>% tail(1)) %>% tail(1)) / month(df_data$ref_date) %>% tail(1)
       
     }else {
       curr_ytd_val <- zoo::rollsumr(df_data$value, month(df_data$ref_date) %>% tail(1)) %>% tail(1)
-      prev_ytd_val <- zoo::rollsumr(lag(df_data$value, 12), month(df_data$ref_date) %>% tail(1)) %>% tail(1)
+      prev_ytd_val <- zoo::rollsumr(dplyr::lag(df_data$value, 12), month(df_data$ref_date) %>% tail(1)) %>% tail(1)
     }
     
     ytd_chg <- curr_ytd_val - prev_ytd_val
@@ -69,14 +69,32 @@ format_summary_data <- function(data) {
   if(exists("mom_val", data)){
     data %>%
       mutate(month = paste(month(ref_date, label = TRUE, abbr = TRUE), year(ref_date)),
-             icon_mom = case_when(mom_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
-                                  mom_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
+             icon_mom = case_when(str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & mom_chg > 0 ~ ## red
+                                    as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:red")),
+                                  !str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & mom_chg > 0 ~ 
+                                    as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")), ## green
+                                  str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & mom_chg < 0 ~
+                                    as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:#5ec467")), ## green
+                                  !str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & mom_chg < 0 ~ 
+                                    as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")), ## red
+                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236"))), ## yellow
+             icon_yoy = case_when(str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & yoy_chg > 0 ~ ## red
+                                    as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:red")),
+                                  !str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & yoy_chg > 0 ~ 
+                                    as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")), ## green
+                                  str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & yoy_chg < 0 ~
+                                    as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:#5ec467")), ## green
+                                  !str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & yoy_chg < 0 ~ 
+                                    as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")), ## red
                                   TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236"))),
-             icon_yoy = case_when(yoy_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
-                                  yoy_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
-                                  TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236"))),
-             icon_ytd = case_when(ytd_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
-                                  ytd_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
+             icon_ytd = case_when(str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & ytd_chg > 0 ~ ## red
+                                    as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:red")),
+                                  !str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & ytd_chg > 0 ~ 
+                                    as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")), ## green
+                                  str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & ytd_chg < 0 ~
+                                    as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:#5ec467")), ## green
+                                  !str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & ytd_chg < 0 ~ 
+                                    as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")), ## red
                                   TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236")))) %>%
       select(`INDICATOR` = title, 
              `Reference Month` = month, 
@@ -92,11 +110,23 @@ format_summary_data <- function(data) {
     data %>%
       mutate(month = paste(month(ref_date, label = TRUE, abbr = TRUE), year(ref_date)),
              Estimate = prettyNum(value, big.mark = ","),
-             icon_yoy = case_when(yoy_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
-                                  yoy_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
+             icon_yoy = case_when(str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & yoy_chg > 0 ~ ## red
+                                    as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:red")),
+                                  !str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & yoy_chg > 0 ~ 
+                                    as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")), ## green
+                                  str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & yoy_chg < 0 ~
+                                    as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:#5ec467")), ## green
+                                  !str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & yoy_chg < 0 ~ 
+                                    as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")), ## red
                                   TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236"))),
-             icon_ytd = case_when(ytd_chg > 0 ~ as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")),
-                                  ytd_chg < 0 ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")),
+             icon_ytd = case_when(str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & ytd_chg > 0 ~ ## red
+                                    as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:red")),
+                                  !str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & ytd_chg > 0 ~ 
+                                    as.character(tags$i(class ="fas fa-arrow-alt-circle-up fa-2x", style = "color:#5ec467")), ## green
+                                  str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & ytd_chg < 0 ~
+                                    as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:#5ec467")), ## green
+                                  !str_detect(title, "Unemployment Rate|Employment Insurance Beneficiaries") & ytd_chg < 0 ~ 
+                                    as.character(tags$i(class = "fas fa-arrow-alt-circle-down fa-2x", style = "color:red")), ## red
                                   TRUE ~ as.character(tags$i(class = "fas fa-arrow-alt-circle-right fa-2x", style = "color:#f5d236")))) %>%
       select(INDICATOR,
              `Reference Month` = month, 
