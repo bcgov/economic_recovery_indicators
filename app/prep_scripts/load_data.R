@@ -2,6 +2,7 @@
 ## Script will output two .rds data files to app/data that app will read in ##
 
 #### load packages ----
+library(here)
 if (!require('zoo')) install.packages('zoo'); library(zoo)      ## needed for the Haver interface
 if (!require('Haver')) install.packages('Haver', repos='http://www.haver.com/r/'); library(Haver)
 library(tidyverse)
@@ -20,6 +21,10 @@ months <- data.frame(Month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
                              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
                      m = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
                      stringsAsFactors = FALSE)
+
+
+## get indicators_list.csv
+indicators_list <- read_csv(here("app", "indicators_list.csv"))
 
 
 #### get exports data ----
@@ -83,6 +88,8 @@ data_trip <- openxlsx::readWorkbook(xlsxFile = paste0(DRIVE_LOCATION, PROJECT_LO
 ## Source: BC Stats (we're already publishing this on our website)
 ## https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data
 ## monthly sa (seasonally adjusted) data file
+temp <- indicators_list %>% filter(str_detect(title, pattern = "International Merchandise"))
+
 data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov/data/statistics/business-industry-trade/trade/seasonally_adjusted_exports.xlsx",
                                    startRow = 2) %>%
   dplyr::filter(str_detect(Month, pattern = "Source", negate = TRUE)) %>%
@@ -93,9 +100,9 @@ data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov
          Month = str_sub(Month, start = 1, end = 3)) %>%
   left_join(months, by = "Month") %>%
   ## create vars needed for app
-  mutate(title = "<b>International Merchandise Exports</b><br>($Thousands, SA)",
-         label = "International Merchandise Exports",
-         filter_var = "overall",
+  mutate(title = temp$title, #"<b>International Merchandise Exports</b><br>($Thousands, SA)",
+         label = temp$label, #"International Merchandise Exports",
+         filter_var = temp$filter_var, #"overall",
          ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d")) %>%
   ## re-order/name columns and drop all export columns other than Total
   select(title, label, filter_var, ref_date, value = Total)
@@ -105,15 +112,16 @@ data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov
 ## Source: US Census Bureau (open-data license by US Bureau)
 ## Statbase: V122103
 ## J:\PGMS\SQL Statbase\Data Extraction\Statbase.exe
+temp <- indicators_list %>% filter(str_detect(title, pattern = "US Housing Starts"))
 
 data_ushs <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints WHERE SeriesId IN 
                            (SELECT SeriesId FROM dbo.GetSeriesId
                            ('V122103')
                            ) AND ValueDate>='01-Jan-2010'") %>%
   ## create vars needed for app
-  mutate(title = "<b>US Housing Starts</b><br>(Thousands, SAAR)",
-         label = "US Housing Starts",
-         filter_var = "overall",
+  mutate(title = temp$title, #"<b>US Housing Starts</b><br>(Thousands, SAAR)",
+         label = temp$label, #"US Housing Starts",
+         filter_var = temp$filter_var, #"overall",
          ref_date = as.Date(ValueDate, "%Y-%m-%d")) %>%
   ## re-order/name columns
   select(title, label, filter_var, ref_date, value = Value)
@@ -122,6 +130,7 @@ data_ushs <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints
 ### * (haver) Housing Starts (Units, SAAR) ----
 ## Source: Haver
 ## Haver: GM00013
+temp <- indicators_list %>% filter(label == "Housing Starts")
 
 haver.path("//decimal/DLX/DATA/")        # haver.path("restore")
 data_cmhc <- haver.data(codes = c("GM00013"),
@@ -133,9 +142,9 @@ data_cmhc <- haver.data(codes = c("GM00013"),
   mutate(Year = str_sub(Date, start = 1, end = 5),
          Month = str_sub(Date, start = 6)) %>%
   left_join(months, by = "Month") %>%
-  mutate(title = "<b>Housing Starts</b><br>(units, SAAR)",
-         label = "Housing Starts",
-         filter_var = "businesses",
+  mutate(title = temp$title, #"<b>Housing Starts</b><br>(units, SAAR)",
+         label = temp$label, #"Housing Starts",
+         filter_var = temp$filter_var, #"businesses",
          ref_date = as.Date(paste0(Year, m, "-01"), "%Y-%m-%d"),
          value = gm00013*1000) %>%
   ## re-order/name columns
@@ -149,15 +158,16 @@ data_cmhc <- haver.data(codes = c("GM00013"),
 ## alternate source: http://www.mtc-currentperformance.com/Hotel.aspx
 ##      choose: By Month, Geography: BC, Measure Occupancy rate, Refresh, Show Table; = C40
 ##      can't see a way to scrape the data programmatically
+temp <- indicators_list %>% filter(str_detect(title, pattern = "Hotel Occupancy"))
 
 data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints WHERE SeriesId IN 
                            (SELECT SeriesId FROM dbo.GetSeriesId
                            ('C40')
                            ) AND ValueDate>='01-Jan-2010'") %>%
   ## create vars needed for app
-  mutate(title = "<b>Hotel Occupancy Rate</b><br>(%, NSA)",
-         label = "Hotel Occupancy Rate",
-         filter_var = "businesses",
+  mutate(title = temp$title, #"<b>Hotel Occupancy Rate</b><br>(%, NSA)",
+         label = temp$label, #"Hotel Occupancy Rate",
+         filter_var = temp$filter_var, #"businesses",
          ref_date = as.Date(ValueDate, "%Y-%m-%d")) %>%
   ## re-order/name columns
   select(title, label, filter_var, ref_date, value = Value)
@@ -174,6 +184,7 @@ data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints 
 ##        4ctl_abo_cow_3MMA.ivt
 ## aboriginal employment, both sexes, 15 years and up data totals for BC
 ## Make sure Aboriginal data is set to aboriginal-aboriginal instead of aboriginal-total
+temp <- indicators_list %>% filter(str_detect(title, pattern = "Indigenous Employment"))
 
 data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyond2020data.csv")) %>%
   ## prep for YYYY-MM-DD ref_date
@@ -183,16 +194,16 @@ data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyo
   left_join(months, by = "Month") %>%
   mutate(ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d")) %>%
   ## create vars needed for app
-  mutate(title = "<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, 3MMA)",
-         label = "Indigenous Employment, Off-Reserve",
-         filter_var = "chart",
+  mutate(title = temp$title, #"<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, 3MMA)",
+         label = temp$label, #"Indigenous Employment, Off-Reserve",
+         filter_var = temp$filter_var, #"chart",
          Indigenous = as.numeric(Indigenous)) %>%
   ## re-order/name columns
   select(title, label, filter_var, ref_date, value = Indigenous)
 
 
 ### * bind non-cansim datasets ----
-temp <- read_csv(here::here("app", "indicators_list.csv")) %>%
+temp <- indicators_list %>%    #read_csv(here::here("app", "indicators_list.csv")) %>%
   dplyr::filter(dataset == "manual") %>% select(title) %>% pull()
 titles_nc <- c(rep(temp[1], dim(data_ime)[1]),
                rep(temp[2], dim(data_ushs)[1]),
