@@ -3,8 +3,8 @@
 
 #### load packages ----
 library(here)
-if (!require('zoo')) install.packages('zoo'); library(zoo)      ## needed for the Haver interface
-if (!require('Haver')) install.packages('Haver', repos='http://www.haver.com/r/'); library(Haver)
+# if (!require('zoo')) install.packages('zoo'); library(zoo)      ## needed for the Haver interface
+# if (!require('Haver')) install.packages('Haver', repos='http://www.haver.com/r/'); library(Haver)
 library(tidyverse)
 library(openxlsx)
 if (!require(RODBC)) install.packages("RODBC"); library(RODBC)  ## needed for statbase connection
@@ -127,28 +127,28 @@ data_ushs <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints
   select(title, label, filter_var, ref_date, value = Value)
 
 
-### * (haver) Housing Starts (Units, SAAR) ----
-## Source: Haver
-## Haver: GM00013
-temp <- indicators_list %>% filter(label == "Housing Starts")
-
-haver.path("//decimal/DLX/DATA/")        # haver.path("restore")
-data_cmhc <- haver.data(codes = c("GM00013"),
-                        database = "CANADAR",
-                        start = as.Date("2010-01-01", format = "%Y-%m-%d")) %>%
-  data.frame() %>%
-  rownames_to_column(var = "Date") %>%
-  ## create vars needed for app
-  mutate(Year = str_sub(Date, start = 1, end = 5),
-         Month = str_sub(Date, start = 6)) %>%
-  left_join(months, by = "Month") %>%
-  mutate(title = temp$title, #"<b>Housing Starts</b><br>(units, SAAR)",
-         label = temp$label, #"Housing Starts",
-         filter_var = temp$filter_var, #"businesses",
-         ref_date = as.Date(paste0(Year, m, "-01"), "%Y-%m-%d"),
-         value = gm00013*1000) %>%
-  ## re-order/name columns
-  select(title, label, filter_var, ref_date, value)
+# ### * (haver) Housing Starts (Units, SAAR) ----
+# ## Source: Haver
+# ## Haver: GM00013
+# temp <- indicators_list %>% filter(label == "Housing Starts")
+# 
+# haver.path("//decimal/DLX/DATA/")        # haver.path("restore")
+# data_cmhc <- haver.data(codes = c("GM00013"),
+#                         database = "CANADAR",
+#                         start = as.Date("2010-01-01", format = "%Y-%m-%d")) %>%
+#   data.frame() %>%
+#   rownames_to_column(var = "Date") %>%
+#   ## create vars needed for app
+#   mutate(Year = str_sub(Date, start = 1, end = 5),
+#          Month = str_sub(Date, start = 6)) %>%
+#   left_join(months, by = "Month") %>%
+#   mutate(title = temp$title, #"<b>Housing Starts</b><br>(units, SAAR)",
+#          label = temp$label, #"Housing Starts",
+#          filter_var = temp$filter_var, #"businesses",
+#          ref_date = as.Date(paste0(Year, m, "-01"), "%Y-%m-%d"),
+#          value = gm00013*1000) %>%
+#   ## re-order/name columns
+#   select(title, label, filter_var, ref_date, value)
 
 
 ### * (statbase) Hotel Occupancy Rate (%, NSA) ----
@@ -207,16 +207,15 @@ temp <- indicators_list %>%    #read_csv(here::here("app", "indicators_list.csv"
   dplyr::filter(dataset == "manual") %>% select(title) %>% pull()
 titles_nc <- c(rep(temp[1], dim(data_ime)[1]),
                rep(temp[2], dim(data_ushs)[1]),
-               rep(temp[3], dim(data_cmhc)[1]),
-               rep(temp[4], dim(data_hor)[1]),
-               rep(temp[5], dim(data_ind)[1]))
-non_cansim_data <- bind_rows(data_ime, data_ushs, data_cmhc, data_hor, data_ind) %>%
+               rep(temp[3], dim(data_hor)[1]),
+               rep(temp[4], dim(data_ind)[1]))
+non_cansim_data <- bind_rows(data_ime, data_ushs, data_hor, data_ind) %>%
   mutate(title = factor(x = titles_nc, levels = temp),
          label = factor(label), 
          filter_var = factor(filter_var))
 
 RODBC::odbcCloseAll()
-rm(temp, titles_nc, data_ime, data_ushs, data_cmhc, data_hor, data_ind, 
+rm(temp, titles_nc, data_ime, data_ushs, data_hor, data_ind, 
    cn, DRIVE_LOCATION, PROJECT_LOCATION, months)
 
 
