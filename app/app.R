@@ -549,7 +549,10 @@ server <- function(input, output, session) {
         
       }
 
-      p <- ggplotly(p)
+      p <- ggplotly(p, dynamicTicks = TRUE) %>%
+        layout(xaxis = list(type="auto", nticks=24,
+                            rangeslider = list(visible = T,
+                                               bgcolor = "#d4d4d4")))
 
     }
   })
