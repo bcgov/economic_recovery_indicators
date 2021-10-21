@@ -60,7 +60,8 @@ cansim_data <- cansim::get_cansim_vector(
   mutate(REF_DATE = ymd(REF_DATE, truncated = 2)) %>%
   janitor::clean_names() %>%
   left_join(titles, by = c("vector")) %>%
-  select(title, label, filter_var, ref_date, value)
+  select(title, label, filter_var, ref_date, value) %>% 
+  mutate(value = case_when(label == "Housing Starts"~value*1000,TRUE~as.numeric(value)))
 
 cansim_stats <- cansim_data %>%
   get_mom_stats() %>%
@@ -484,13 +485,13 @@ server <- function(input, output, session) {
     line_chart <- all_data %>% 
       filter(chart_list == input$indicator)
     
-    ## tables display units, chart displays in thousands
+    # tables display units, chart displays in thousands
     if(input$indicator == "Housing Starts") {
       line_chart <- line_chart %>%
         mutate(value = janitor::round_half_up(value/1000, digits = 0),
                title = str_replace(title, pattern = "Units", replacement = "Thousands"))
     }
-    ## tables display values, chart displays y-o-y
+    # tables display values, chart displays y-o-y
     if(str_detect(input$indicator, "Consumer Price Index")) {
       line_chart <- cpi_yoy %>% 
         select(-value) %>%
