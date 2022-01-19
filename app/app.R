@@ -1,10 +1,12 @@
 ## Economic Recovery Indicators app ----
 ## app title: Economic-Indicators
 ## app ID: 3622761
+## URL: https://bcstats.shinyapps.io/Economic-Indicators/
 
 
 ## load libraries ----
 library(tidyverse)
+# library(purrr)  ## included in tidyverse
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
@@ -15,7 +17,7 @@ library(janitor)
 library(cansim)
 library(DT)
 library(scales)
-library(purrr)
+
 
 options(scipen = 999999999)  ## so chart axes read properly
 
@@ -27,8 +29,62 @@ source_exports <- "BC Stats using data supplied by Statistics Canada"
 source("scripts/chart_theme.R")
 source("scripts/functions.R")
 
+
+## months conversion ----
+months <- data.frame(Month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                     m = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
+                     stringsAsFactors = FALSE)
+
+
 ## load data ----
+titles_all <- read_csv("indicators_list.csv")
+chart_list <- titles_all %>% select(chart_list) %>% pull()
+charts_multi <- titles_all %>% group_by(order) %>% tally() %>% filter(n > 1) %>% pull(order)
+
+
+## get International Merchandise Exports ($Thousands, SA)
+## Source: BC Stats (we're already publishing this on our website)
+## https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data
+## monthly sa (seasonally adjusted) data file
+temp <- titles_all %>% filter(str_detect(title, pattern = "International Merchandise"))
+data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov/data/statistics/business-industry-trade/trade/seasonally_adjusted_exports.xlsx",
+                                   startRow = 2) %>%
+  dplyr::filter(str_detect(Month, pattern = "Source", negate = TRUE)) %>%
+  ## prep for YYYY-MM-DD ref_date
+  mutate(Year = case_when(str_detect(Month, "'") ~ str_sub(Month, start = -2), TRUE ~ NA_character_)) %>%
+  fill(Year) %>%
+  mutate(Year = case_when(Year >= 88 ~ paste0("19", Year), TRUE ~ paste0("20", Year)),
+         Month = str_sub(Month, start = 1, end = 3)) %>%
+  left_join(months, by = "Month") %>%
+  ## create vars needed for app
+  mutate(title = temp$title, #"<b>International Merchandise Exports</b><br>($Thousands, SA)",
+         label = temp$label, #"International Merchandise Exports",
+         filter_var = temp$filter_var, #"overall",
+         ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d")) %>%
+  ## re-order/name columns and drop all export columns other than Total
+  select(title, label, filter_var, ref_date, value = Total)
+rm(temp)
+
+## get Hotel Occupancy Rate (%, NSA)
+## Source: CBRE Hotels' Trends (data all available on website noted below)
+## URL: http://www.mtc-currentperformance.com/Hotel.aspx, By Month, for BC, Measure Occupancy rate
+temp <- indicators_list %>% filter(str_detect(title, pattern = "Hotel Occupancy"))
+## set ey=2121 so that this will continue to update for another 100 years :)
+data_hor <- read_csv("http://www.mtc-currentperformance.com/HotelDataXML.aspx?querytype=1&type=csv&sy=2001&sm=1&ey=2121&em=12&MS=1&GA=2&PR=&PSR=") %>%
+  ## join in two-digit month
+  left_join(months, by = "Month") %>%
+  ## create vars needed for app
+  mutate(title = temp$title, #"<b>Hotel Occupancy Rate</b><br>(%, NSA)",
+         label = temp$label, #"Hotel Occupancy Rate",
+         filter_var = temp$filter_var, #"businesses",
+         ref_date = as.Date(paste(Year, m, "01", sep = "-")),
+         value = as.numeric(str_replace(`British Columbia`, pattern = "%", replacement = ""))) %>%
+  ## re-order/name columns
+  select(title, label, filter_var, ref_date, value)
+
 non_cansim_data <- readRDS("data/non_cansim_data.rds") %>%
+  bind_rows(data_ime, data_hor) %>%
   filter(str_sub(ref_date, start = 1, end = 4) >= 2010)
 
 non_cansim_stats <- non_cansim_data %>%
@@ -42,10 +98,6 @@ exports_stats <- exports_data %>%
   get_yoy_stats() %>%
   get_ytd_stats() %>%
   arrange(title)
-
-titles_all <- read_csv("indicators_list.csv")
-chart_list <- titles_all %>% select(chart_list) %>% pull()
-charts_multi <- titles_all %>% group_by(order) %>% tally() %>% filter(n > 1) %>% pull(order)
 
 
 ## get cansim data ----
