@@ -3,8 +3,6 @@
 
 #### load packages ----
 library(here)
-# if (!require('zoo')) install.packages('zoo'); library(zoo)      ## needed for the Haver interface
-# if (!require('Haver')) install.packages('Haver', repos='http://www.haver.com/r/'); library(Haver)
 library(tidyverse)
 library(openxlsx)
 if (!require(RODBC)) install.packages("RODBC"); library(RODBC)  ## needed for statbase connection
@@ -84,30 +82,6 @@ data_trip <- openxlsx::readWorkbook(xlsxFile = paste0(DRIVE_LOCATION, PROJECT_LO
 
 
 #### get non-CANSIM data ----
-### * (web) International Merchandise Exports ($Thousands, SA) ----
-## Source: BC Stats (we're already publishing this on our website)
-## https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data
-## monthly sa (seasonally adjusted) data file
-temp <- indicators_list %>% filter(str_detect(title, pattern = "International Merchandise"))
-
-data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov/data/statistics/business-industry-trade/trade/seasonally_adjusted_exports.xlsx",
-                                   startRow = 2) %>%
-  dplyr::filter(str_detect(Month, pattern = "Source", negate = TRUE)) %>%
-  ## prep for YYYY-MM-DD ref_date
-  mutate(Year = case_when(str_detect(Month, "'") ~ str_sub(Month, start = -2), TRUE ~ NA_character_)) %>%
-  fill(Year) %>%
-  mutate(Year = case_when(Year >= 88 ~ paste0("19", Year), TRUE ~ paste0("20", Year)),
-         Month = str_sub(Month, start = 1, end = 3)) %>%
-  left_join(months, by = "Month") %>%
-  ## create vars needed for app
-  mutate(title = temp$title, #"<b>International Merchandise Exports</b><br>($Thousands, SA)",
-         label = temp$label, #"International Merchandise Exports",
-         filter_var = temp$filter_var, #"overall",
-         ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d")) %>%
-  ## re-order/name columns and drop all export columns other than Total
-  select(title, label, filter_var, ref_date, value = Total)
-
-
 ### * (statbase) US Housing Starts (Thousands, SAAR) ----
 ## Source: US Census Bureau (open-data license by US Bureau)
 ## Statbase: V122103
@@ -122,52 +96,6 @@ data_ushs <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints
   mutate(title = temp$title, #"<b>US Housing Starts</b><br>(Thousands, SAAR)",
          label = temp$label, #"US Housing Starts",
          filter_var = temp$filter_var, #"overall",
-         ref_date = as.Date(ValueDate, "%Y-%m-%d")) %>%
-  ## re-order/name columns
-  select(title, label, filter_var, ref_date, value = Value)
-
-
-# ### * (haver) Housing Starts (Units, SAAR) ----
-# ## Source: Haver
-# ## Haver: GM00013
-# temp <- indicators_list %>% filter(label == "Housing Starts")
-# 
-# haver.path("//decimal/DLX/DATA/")        # haver.path("restore")
-# data_cmhc <- haver.data(codes = c("GM00013"),
-#                         database = "CANADAR",
-#                         start = as.Date("2010-01-01", format = "%Y-%m-%d")) %>%
-#   data.frame() %>%
-#   rownames_to_column(var = "Date") %>%
-#   ## create vars needed for app
-#   mutate(Year = str_sub(Date, start = 1, end = 5),
-#          Month = str_sub(Date, start = 6)) %>%
-#   left_join(months, by = "Month") %>%
-#   mutate(title = temp$title, #"<b>Housing Starts</b><br>(units, SAAR)",
-#          label = temp$label, #"Housing Starts",
-#          filter_var = temp$filter_var, #"businesses",
-#          ref_date = as.Date(paste0(Year, m, "-01"), "%Y-%m-%d"),
-#          value = gm00013*1000) %>%
-#   ## re-order/name columns
-#   select(title, label, filter_var, ref_date, value)
-
-
-### * (statbase) Hotel Occupancy Rate (%, NSA) ----
-## Source: CBRE Hotels' Trends (data all available on website noted below)
-## Statbase: C40
-## J:\PGMS\SQL Statbase\Data Extraction\Statbase.exe
-## alternate source: http://www.mtc-currentperformance.com/Hotel.aspx
-##      choose: By Month, Geography: BC, Measure Occupancy rate, Refresh, Show Table; = C40
-##      can't see a way to scrape the data programmatically
-temp <- indicators_list %>% filter(str_detect(title, pattern = "Hotel Occupancy"))
-
-data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints WHERE SeriesId IN 
-                           (SELECT SeriesId FROM dbo.GetSeriesId
-                           ('C40')
-                           ) AND ValueDate>='01-Jan-2010'") %>%
-  ## create vars needed for app
-  mutate(title = temp$title, #"<b>Hotel Occupancy Rate</b><br>(%, NSA)",
-         label = temp$label, #"Hotel Occupancy Rate",
-         filter_var = temp$filter_var, #"businesses",
          ref_date = as.Date(ValueDate, "%Y-%m-%d")) %>%
   ## re-order/name columns
   select(title, label, filter_var, ref_date, value = Value)
@@ -205,17 +133,15 @@ data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyo
 ### * bind non-cansim datasets ----
 temp <- indicators_list %>%    #read_csv(here::here("app", "indicators_list.csv")) %>%
   dplyr::filter(dataset == "manual") %>% select(title) %>% pull()
-titles_nc <- c(rep(temp[1], dim(data_ime)[1]),
-               rep(temp[2], dim(data_ushs)[1]),
-               rep(temp[3], dim(data_hor)[1]),
-               rep(temp[4], dim(data_ind)[1]))
-non_cansim_data <- bind_rows(data_ime, data_ushs, data_hor, data_ind) %>%
+titles_nc <- c(rep(temp[1], dim(data_ushs)[1]),
+               rep(temp[2], dim(data_ind)[1]))
+non_cansim_data <- bind_rows(data_ushs, data_ind) %>%
   mutate(title = factor(x = titles_nc, levels = temp),
          label = factor(label), 
          filter_var = factor(filter_var))
 
 RODBC::odbcCloseAll()
-rm(temp, titles_nc, data_ime, data_ushs, data_hor, data_ind, 
+rm(temp, titles_nc, data_ushs, data_ind, 
    cn, DRIVE_LOCATION, PROJECT_LOCATION, months)
 
 
@@ -223,3 +149,80 @@ rm(temp, titles_nc, data_ime, data_ushs, data_hor, data_ind,
 saveRDS(data_trip, here::here("app", "data", "exports_data.rds"))
 saveRDS(non_cansim_data, here::here("app", "data", "non_cansim_data.rds"))
 
+
+#### UNUSED old code ----
+# if (!require('zoo')) install.packages('zoo'); library(zoo)      ## needed for the Haver interface
+# if (!require('Haver')) install.packages('Haver', repos='http://www.haver.com/r/'); library(Haver)
+
+# ### * (haver) Housing Starts (Units, SAAR)
+# ## Source: Haver
+# ## Haver: GM00013
+# temp <- indicators_list %>% filter(label == "Housing Starts")
+# 
+# haver.path("//decimal/DLX/DATA/")        # haver.path("restore")
+# data_cmhc <- haver.data(codes = c("GM00013"),
+#                         database = "CANADAR",
+#                         start = as.Date("2010-01-01", format = "%Y-%m-%d")) %>%
+#   data.frame() %>%
+#   rownames_to_column(var = "Date") %>%
+#   ## create vars needed for app
+#   mutate(Year = str_sub(Date, start = 1, end = 5),
+#          Month = str_sub(Date, start = 6)) %>%
+#   left_join(months, by = "Month") %>%
+#   mutate(title = temp$title, #"<b>Housing Starts</b><br>(units, SAAR)",
+#          label = temp$label, #"Housing Starts",
+#          filter_var = temp$filter_var, #"businesses",
+#          ref_date = as.Date(paste0(Year, m, "-01"), "%Y-%m-%d"),
+#          value = gm00013*1000) %>%
+#   ## re-order/name columns
+#   select(title, label, filter_var, ref_date, value)
+# 
+# 
+# ### * (web) International Merchandise Exports ($Thousands, SA)
+# ## DONE IN-APP NOW
+# ## Source: BC Stats (we're already publishing this on our website)
+# ## https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data
+# ## monthly sa (seasonally adjusted) data file
+# temp <- indicators_list %>% filter(str_detect(title, pattern = "International Merchandise"))
+# 
+# data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov/data/statistics/business-industry-trade/trade/seasonally_adjusted_exports.xlsx",
+#                                    startRow = 2) %>%
+#   dplyr::filter(str_detect(Month, pattern = "Source", negate = TRUE)) %>%
+#   ## prep for YYYY-MM-DD ref_date
+#   mutate(Year = case_when(str_detect(Month, "'") ~ str_sub(Month, start = -2), TRUE ~ NA_character_)) %>%
+#   fill(Year) %>%
+#   mutate(Year = case_when(Year >= 88 ~ paste0("19", Year), TRUE ~ paste0("20", Year)),
+#          Month = str_sub(Month, start = 1, end = 3)) %>%
+#   left_join(months, by = "Month") %>%
+#   ## create vars needed for app
+#   mutate(title = temp$title, #"<b>International Merchandise Exports</b><br>($Thousands, SA)",
+#          label = temp$label, #"International Merchandise Exports",
+#          filter_var = temp$filter_var, #"overall",
+#          ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d")) %>%
+#   ## re-order/name columns and drop all export columns other than Total
+#   select(title, label, filter_var, ref_date, value = Total)
+# 
+# 
+# ### * (statbase) Hotel Occupancy Rate (%, NSA)
+# ## DONE IN-APP NOW
+# ## Source: CBRE Hotels' Trends (data all available on website noted below)
+# ## Statbase: C40
+# ## J:\PGMS\SQL Statbase\Data Extraction\Statbase.exe
+# ## alternate source: http://www.mtc-currentperformance.com/Hotel.aspx
+# ##      choose: By Month, Geography: BC, Measure Occupancy rate, Refresh, Show Table; = C40
+# ##      selections ~ http://www.mtc-currentperformance.com/HotelDataXML.aspx?querytype=1&type=csv&sy=2001&sm=1&ey=2121&em=12&MS=1&GA=2&PR=&PSR=
+# temp <- indicators_list %>% filter(str_detect(title, pattern = "Hotel Occupancy"))
+# 
+# data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints WHERE SeriesId IN
+#                            (SELECT SeriesId FROM dbo.GetSeriesId
+#                            ('C40')
+#                            ) AND ValueDate>='01-Jan-2010'") %>%
+#   ## create vars needed for app
+#   mutate(title = temp$title, #"<b>Hotel Occupancy Rate</b><br>(%, NSA)",
+#          label = temp$label, #"Hotel Occupancy Rate",
+#          filter_var = temp$filter_var, #"businesses",
+#          ref_date = as.Date(ValueDate, "%Y-%m-%d")) %>%
+#   ## re-order/name columns
+#   select(title, label, filter_var, ref_date, value = Value)
+# 
+# 
