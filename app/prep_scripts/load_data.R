@@ -20,16 +20,14 @@ months <- data.frame(Month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
                      m = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
                      stringsAsFactors = FALSE)
 
-
 ## get indicators_list.csv
-indicators_list <- read_csv(here("app", "indicators_list.csv"))
+indicators_list <- read_csv(here("app", "indicators_list.csv"), show_col_types = FALSE)
 
 
 #### get exports data ----
 ### * (trip) Key Exports by Destination and Commodity ----
 ## Source: Statistics Canada (open-data license by Stats Can)
 ## TRIP: Pandemic Indicators Report
-## \\SFP.IDIR.BCGOV\S152\S52002\Trade\TRIP files\Application
 ## this data is manually updated by running the TRIP Application 'Pandemic Indicators Report' job and
 ##   then copying as TRIPexportdata.csv
 
@@ -84,8 +82,6 @@ data_trip <- openxlsx::readWorkbook(xlsxFile = paste0(DRIVE_LOCATION, PROJECT_LO
 #### get non-CANSIM data ----
 ### * (statbase) US Housing Starts (Thousands, SAAR) ----
 ## Source: US Census Bureau (open-data license by US Bureau)
-## Statbase: V122103
-## J:\PGMS\SQL Statbase\Data Extraction\Statbase.exe
 temp <- indicators_list %>% filter(str_detect(title, pattern = "US Housing Starts"))
 
 data_ushs <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints WHERE SeriesId IN 
@@ -100,6 +96,24 @@ data_ushs <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints
   ## re-order/name columns
   select(title, label, filter_var, ref_date, value = Value)
 
+### * (statbase) Hotel Occupancy Rate (%, NSA) ----
+## Source: CBRE Hotels' Trends (data all available on website noted below)
+## alternate source: http://www.mtc-currentperformance.com/Hotel.aspx
+##      choose: By Month, Geography: BC, Measure Occupancy rate, Refresh, Show Table; = C40
+##      selections ~ http://www.mtc-currentperformance.com/HotelDataXML.aspx?querytype=1&type=csv&sy=2001&sm=1&ey=2121&em=12&MS=1&GA=2&PR=&PSR=
+temp <- indicators_list %>% filter(str_detect(title, pattern = "Hotel Occupancy"))
+
+data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints WHERE SeriesId IN
+                           (SELECT SeriesId FROM dbo.GetSeriesId
+                           ('C40')
+                           ) AND ValueDate>='01-Jan-2010'") %>%
+  ## create vars needed for app
+  mutate(title = temp$title, #"<b>Hotel Occupancy Rate</b><br>(%, NSA)",
+         label = temp$label, #"Hotel Occupancy Rate",
+         filter_var = temp$filter_var, #"businesses",
+         ref_date = as.Date(ValueDate, "%Y-%m-%d")) %>%
+  ## re-order/name columns
+  select(title, label, filter_var, ref_date, value = Value)
 
 ### * (ivt) Indigenous Employment, Off-Reserve (Thousands, 3MMA) ----
 ## install: https://www.statcan.gc.ca/eng/public/beyond20-20
@@ -108,13 +122,11 @@ data_ushs <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints
 ## this data is manually updated by opening the .ivt file for the corresponding month and year
 ##   then copying to the appropriate column in Beyond2020data.csv
 ## 3MMA = Three-Month Moving Average
-## J:\DATA\StatCan\LABOURFORCESURVEY\Aboriginal LFS\<Year> Monthly\<YYYY-MM>\
-##        4ctl_abo_cow_3MMA.ivt
 ## aboriginal employment, both sexes, 15 years and up data totals for BC
 ## Make sure Aboriginal data is set to aboriginal-aboriginal instead of aboriginal-total
 temp <- indicators_list %>% filter(str_detect(title, pattern = "Indigenous Employment"))
 
-data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyond2020data.csv")) %>%
+data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyond2020data.csv"), show_col_types = FALSE) %>%
   ## prep for YYYY-MM-DD ref_date
   mutate(Year = paste0("20", str_sub(Month, start = 1, end = 2)),   ##Year = paste0("20", str_sub(Month, start = -2)),
          Month = str_sub(Month, start = 4)) %>%
@@ -129,26 +141,49 @@ data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyo
   ## re-order/name columns
   select(title, label, filter_var, ref_date, value = Indigenous)
 
+# ### * (web) International Merchandise Exports ($Thousands, SA) ----
+# ## Source: BC Stats (we're already publishing this on our website)
+# ## https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data
+# ## monthly sa (seasonally adjusted) data file
+temp <- indicators_list %>% filter(str_detect(title, pattern = "International Merchandise"))
+
+data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov/data/statistics/business-industry-trade/trade/seasonally_adjusted_exports.xlsx",
+                                   startRow = 2) %>%
+  dplyr::filter(str_detect(Month, pattern = "Source", negate = TRUE)) %>%
+  ## prep for YYYY-MM-DD ref_date
+  mutate(Year = case_when(str_detect(Month, "'") ~ str_sub(Month, start = -2), TRUE ~ NA_character_)) %>%
+  fill(Year) %>%
+  mutate(Year = case_when(Year >= 88 ~ paste0("19", Year), TRUE ~ paste0("20", Year)),
+         Month = str_sub(Month, start = 1, end = 3)) %>%
+  left_join(months, by = "Month") %>%
+  ## create vars needed for app
+  mutate(title = temp$title, #"<b>International Merchandise Exports</b><br>($Thousands, SA)",
+         label = temp$label, #"International Merchandise Exports",
+         filter_var = temp$filter_var, #"overall",
+         ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d")) %>%
+  ## re-order/name columns and drop all export columns other than Total
+  select(title, label, filter_var, ref_date, value = Total)
+
 
 ### * bind non-cansim datasets ----
-temp <- indicators_list %>%    #read_csv(here::here("app", "indicators_list.csv")) %>%
-  dplyr::filter(dataset == "manual") %>% select(title) %>% pull()
-titles_nc <- c(rep(temp[1], dim(data_ushs)[1]),
-               rep(temp[2], dim(data_ind)[1]))
-non_cansim_data <- bind_rows(data_ushs, data_ind) %>%
-  mutate(title = factor(x = titles_nc, levels = temp),
+# temp <- indicators_list %>%    #read_csv(here::here("app", "indicators_list.csv")) %>%
+#   dplyr::filter(dataset == "manual") %>% select(title) %>% pull()
+# titles_nc <- c(rep(temp[1], dim(data_ushs)[1]),
+#                rep(temp[2], dim(data_ind)[1]))
+non_cansim_data <- bind_rows(data_ime, data_ushs, data_hor, data_ind) %>%
+  mutate(title = fct_inorder(title),
          label = factor(label), 
          filter_var = factor(filter_var))
 
-RODBC::odbcCloseAll()
-rm(temp, titles_nc, data_ushs, data_ind, 
-   cn, DRIVE_LOCATION, PROJECT_LOCATION, months)
+#### cleanup ----
 
+RODBC::odbcCloseAll()
+rm(temp, titles_nc, data_ushs, data_ind,
+   cn, DRIVE_LOCATION, PROJECT_LOCATION, months)
 
 #### save datasets ----
 saveRDS(data_trip, here::here("app", "data", "exports_data.rds"))
 saveRDS(non_cansim_data, here::here("app", "data", "non_cansim_data.rds"))
-
 
 #### UNUSED old code ----
 # if (!require('zoo')) install.packages('zoo'); library(zoo)      ## needed for the Haver interface
@@ -178,51 +213,8 @@ saveRDS(non_cansim_data, here::here("app", "data", "non_cansim_data.rds"))
 #   select(title, label, filter_var, ref_date, value)
 # 
 # 
-# ### * (web) International Merchandise Exports ($Thousands, SA)
-# ## DONE IN-APP NOW
-# ## Source: BC Stats (we're already publishing this on our website)
-# ## https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data
-# ## monthly sa (seasonally adjusted) data file
-# temp <- indicators_list %>% filter(str_detect(title, pattern = "International Merchandise"))
-# 
-# data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov/data/statistics/business-industry-trade/trade/seasonally_adjusted_exports.xlsx",
-#                                    startRow = 2) %>%
-#   dplyr::filter(str_detect(Month, pattern = "Source", negate = TRUE)) %>%
-#   ## prep for YYYY-MM-DD ref_date
-#   mutate(Year = case_when(str_detect(Month, "'") ~ str_sub(Month, start = -2), TRUE ~ NA_character_)) %>%
-#   fill(Year) %>%
-#   mutate(Year = case_when(Year >= 88 ~ paste0("19", Year), TRUE ~ paste0("20", Year)),
-#          Month = str_sub(Month, start = 1, end = 3)) %>%
-#   left_join(months, by = "Month") %>%
-#   ## create vars needed for app
-#   mutate(title = temp$title, #"<b>International Merchandise Exports</b><br>($Thousands, SA)",
-#          label = temp$label, #"International Merchandise Exports",
-#          filter_var = temp$filter_var, #"overall",
-#          ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d")) %>%
-#   ## re-order/name columns and drop all export columns other than Total
-#   select(title, label, filter_var, ref_date, value = Total)
 # 
 # 
-# ### * (statbase) Hotel Occupancy Rate (%, NSA)
-# ## DONE IN-APP NOW
-# ## Source: CBRE Hotels' Trends (data all available on website noted below)
-# ## Statbase: C40
-# ## J:\PGMS\SQL Statbase\Data Extraction\Statbase.exe
-# ## alternate source: http://www.mtc-currentperformance.com/Hotel.aspx
-# ##      choose: By Month, Geography: BC, Measure Occupancy rate, Refresh, Show Table; = C40
-# ##      selections ~ http://www.mtc-currentperformance.com/HotelDataXML.aspx?querytype=1&type=csv&sy=2001&sm=1&ey=2121&em=12&MS=1&GA=2&PR=&PSR=
-# temp <- indicators_list %>% filter(str_detect(title, pattern = "Hotel Occupancy"))
-# 
-# data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints WHERE SeriesId IN
-#                            (SELECT SeriesId FROM dbo.GetSeriesId
-#                            ('C40')
-#                            ) AND ValueDate>='01-Jan-2010'") %>%
-#   ## create vars needed for app
-#   mutate(title = temp$title, #"<b>Hotel Occupancy Rate</b><br>(%, NSA)",
-#          label = temp$label, #"Hotel Occupancy Rate",
-#          filter_var = temp$filter_var, #"businesses",
-#          ref_date = as.Date(ValueDate, "%Y-%m-%d")) %>%
-#   ## re-order/name columns
-#   select(title, label, filter_var, ref_date, value = Value)
-# 
-# 
+
+
+
