@@ -2,8 +2,7 @@
 See https://github.com/BCDevExchange/Our-Project-Docs/blob/master/discussion/projectstates.md
 If you have bcgovr installed and you use RStudio, click the 'Insert BCDevex Badge' Addin. -->
 
-[![Lifecycle:Dormant](https://img.shields.io/badge/Lifecycle-Dormant-ff7f2a)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
-
+[![Lifecycle:Stable](https://img.shields.io/badge/Lifecycle-Stable-97ca00)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
 
 economic\_recovery\_indicators
 ==============================
@@ -14,7 +13,7 @@ To create a shiny app to display Key Economic Recovery Indicators. The **British
 
 ### Project Status
 
-Developmental
+Stable
 
 ### Getting Help or Reporting an Issue
 
