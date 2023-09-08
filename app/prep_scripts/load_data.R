@@ -19,7 +19,7 @@
 library(here)
 library(tidyverse)
 library(openxlsx)
-if (!require(RODBC)) install.packages("RODBC"); library(RODBC)  ## needed for statbase connection
+#if (!require(RODBC)) install.packages("RODBC"); library(RODBC)  ## needed for statbase connection
 
 
 #### prep ----
@@ -98,10 +98,10 @@ data_trip <- openxlsx::readWorkbook(xlsxFile = paste0(DRIVE_LOCATION, PROJECT_LO
 ## Source: US Census Bureau (open-data license by US Bureau)
 temp <- indicators_list %>% filter(str_detect(title, pattern = "US Housing Starts"))
 
-data_ushs <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints WHERE SeriesId IN 
-                           (SELECT SeriesId FROM dbo.GetSeriesId
-                           ('V122103')
-                           ) AND ValueDate>='01-Jan-2010'") %>%
+data_ushs <- tbl(cn, "vwDataPoints") %>%
+  select(VectorNumber,ValueDate,Value, SeriesId) %>%
+  filter(VectorNumber == 'V122103', ValueDate>='01-Jan-2010') %>%
+  collect() %>%
   ## create vars needed for app
   mutate(title = temp$title, #"<b>US Housing Starts</b><br>(Thousands, SAAR)",
          label = temp$label, #"US Housing Starts",
@@ -117,10 +117,10 @@ data_ushs <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints
 ##      selections ~ http://www.mtc-currentperformance.com/HotelDataXML.aspx?querytype=1&type=csv&sy=2001&sm=1&ey=2121&em=12&MS=1&GA=2&PR=&PSR=
 temp <- indicators_list %>% filter(str_detect(title, pattern = "Hotel Occupancy"))
 
-data_hor <- sqlQuery(cn, "SELECT VectorNumber,ValueDate,Value FROM vwDataPoints WHERE SeriesId IN
-                           (SELECT SeriesId FROM dbo.GetSeriesId
-                           ('C40')
-                           ) AND ValueDate>='01-Jan-2010'") %>%
+data_hor <- tbl(cn, "vwDataPoints") %>%
+  select(VectorNumber, ValueDate, Value) %>%
+  filter(VectorNumber == "C40" & ValueDate >= "01-Jan-2010") %>%
+  collect() %>% 
   ## create vars needed for app
   mutate(title = temp$title, #"<b>Hotel Occupancy Rate</b><br>(%, NSA)",
          label = temp$label, #"Hotel Occupancy Rate",
@@ -191,8 +191,9 @@ non_cansim_data <- bind_rows(data_ime, data_ushs, data_hor, data_ind) %>%
 
 #### cleanup ----
 
-RODBC::odbcCloseAll()
-rm(temp, titles_nc, data_ushs, data_ind,
+odbc::dbDisconnect(cn)
+rm(temp, #titles_nc, 
+   data_ushs, data_ind,
    cn, DRIVE_LOCATION, PROJECT_LOCATION, months)
 
 #### save datasets ----
