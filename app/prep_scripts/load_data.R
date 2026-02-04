@@ -16,6 +16,8 @@
 ## Script will output two .rds data files to app/data that app will read in ##
 
 #### load packages ----
+library(dplyr)
+library(stringr)
 library(here)
 library(tidyverse)
 library(openxlsx)
@@ -115,53 +117,28 @@ data_ushs <- tbl(cn, "vwDataPoints") %>%
 ## alternate source: http://www.mtc-currentperformance.com/Hotel.aspx
 ##      choose: By Month, Geography: BC, Measure Occupancy rate, Refresh, Show Table; = C40
 ##      selections ~ http://www.mtc-currentperformance.com/HotelDataXML.aspx?querytype=1&type=csv&sy=2001&sm=1&ey=2121&em=12&MS=1&GA=2&PR=&PSR=
-temp <- indicators_list %>% filter(str_detect(title, pattern = "Hotel Occupancy"))
+##temp <- indicators_list %>% filter(str_detect(title, pattern = "Hotel Occupancy"))
 
-data_hor <- tbl(cn, "vwDataPoints") %>%
-  select(VectorNumber, ValueDate, Value) %>%
-  filter(VectorNumber == "C40" & ValueDate >= "01-Jan-2010") %>%
-  collect() %>% 
+##data_hor <- tbl(cn, "vwDataPoints") %>%
+  ##select(VectorNumber, ValueDate, Value) %>%
+  ##filter(VectorNumber == "C40" & ValueDate >= "01-Jan-2010") %>%
+  ##collect() %>% 
   ## create vars needed for app
-  mutate(title = temp$title, #"<b>Hotel Occupancy Rate</b><br>(%, NSA)",
-         label = temp$label, #"Hotel Occupancy Rate",
-         filter_var = temp$filter_var, #"businesses",
-         ref_date = as.Date(ValueDate, "%Y-%m-%d")) %>%
+  ##mutate(title = temp$title, #"<b>Hotel Occupancy Rate</b><br>(%, NSA)",
+         ##label = temp$label, #"Hotel Occupancy Rate",
+         ##filter_var = temp$filter_var, #"businesses",
+         ##ref_date = as.Date(ValueDate, "%Y-%m-%d")) %>%
   ## re-order/name columns
-  select(title, label, filter_var, ref_date, value = Value)
+  ##select(title, label, filter_var, ref_date, value = Value)
 
-### * (ivt) Indigenous Employment, Off-Reserve (Thousands, 3MMA) ----
-## install: https://www.statcan.gc.ca/eng/public/beyond20-20
-## Source: Statistics Canada (open-data license by Stats Can)
-## Beyond 2020 Tables (.ivt files)
-## this data is manually updated by opening the .ivt file for the corresponding month and year
-##   then copying to the appropriate column in Beyond2020data.csv
-## 3MMA = Three-Month Moving Average
-## aboriginal employment, both sexes, 15 years and up data totals for BC
-## Make sure Aboriginal data is set to aboriginal-aboriginal instead of aboriginal-total
-temp <- indicators_list %>% filter(str_detect(title, pattern = "Indigenous Employment"))
-
-data_ind <- read_csv(file = paste0(DRIVE_LOCATION, PROJECT_LOCATION, "/Data/Beyond2020data.csv"), show_col_types = FALSE) %>%
-  ## prep for YYYY-MM-DD ref_date
-  mutate(Year = paste0("20", str_sub(Month, start = 1, end = 2)),   ##Year = paste0("20", str_sub(Month, start = -2)),
-         Month = str_sub(Month, start = 4)) %>%
-  dplyr::filter(Year >= 2010) %>%
-  left_join(months, by = "Month") %>%
-  mutate(ref_date = as.Date(paste0(Year, "-", m, "-01"), "%Y-%m-%d")) %>%
-  ## create vars needed for app
-  mutate(title = temp$title, #"<b>Indigenous Employment, Off-Reserve</b><br>(Thousands, 3MMA)",
-         label = temp$label, #"Indigenous Employment, Off-Reserve",
-         filter_var = temp$filter_var, #"chart",
-         Indigenous = as.numeric(Indigenous)) %>%
-  ## re-order/name columns
-  select(title, label, filter_var, ref_date, value = Indigenous)
 
 # ### * (web) International Merchandise Exports ($Thousands, SA) ----
-# ## Source: BC Stats (we're already publishing this on our website)
-# ## https://www2.gov.bc.ca/gov/content/data/statistics/business-industry-trade/trade/trade-data
+# ## Source: BC Data Catalogue (we're already publishing this on our website)
+# ## https://catalogue.data.gov.bc.ca/dataset/ca3ad618-b023-4f22-b3f2-e9de1bee92d3/resource/3f0a7e31-a998-463e-9287-20a6631832e4/download/seasonally_adjusted_exports.xlsx
 # ## monthly sa (seasonally adjusted) data file
 temp <- indicators_list %>% filter(str_detect(title, pattern = "International Merchandise"))
 
-data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov/data/statistics/business-industry-trade/trade/seasonally_adjusted_exports.xlsx",
+data_ime <- openxlsx::readWorkbook(xlsxFile = "https://catalogue.data.gov.bc.ca/dataset/ca3ad618-b023-4f22-b3f2-e9de1bee92d3/resource/3f0a7e31-a998-463e-9287-20a6631832e4/download/seasonally_adjusted_exports.xlsx",
                                    startRow = 2) %>%
   dplyr::filter(str_detect(Month, pattern = "Source", negate = TRUE)) %>%
   ## prep for YYYY-MM-DD ref_date
@@ -179,57 +156,74 @@ data_ime <- openxlsx::readWorkbook(xlsxFile = "https://www2.gov.bc.ca/assets/gov
   select(title, label, filter_var, ref_date, value = Total)
 
 
-### * bind non-cansim datasets ----
-# temp <- indicators_list %>%    #read_csv(here::here("app", "indicators_list.csv")) %>%
-#   dplyr::filter(dataset == "manual") %>% select(title) %>% pull()
-# titles_nc <- c(rep(temp[1], dim(data_ushs)[1]),
-#                rep(temp[2], dim(data_ind)[1]))
-non_cansim_data <- bind_rows(data_ime, data_ushs, data_hor, data_ind) %>%
-  mutate(title = fct_inorder(title),
-         label = factor(label), 
-         filter_var = factor(filter_var))
+### * (web) Hotel Occupancy Rate (%) ----
+# ## Source: BC Data Catalogue
+# ## https://catalogue.data.gov.bc.ca/dataset/cace513c-9506-4f20-8dd1-7a072034f5fe/resource/069e0cf9-b75d-499a-95eb-187331fb2e5b/download/monthly_tourism_indicators.csv
+
+temp <- indicators_list %>% filter(str_detect(title, pattern = "Hotel Occupancy Rate"))
+
+# Read the CSV file
+url <- "https://catalogue.data.gov.bc.ca/dataset/cace513c-9506-4f20-8dd1-7a072034f5fe/resource/069e0cf9-b75d-499a-95eb-187331fb2e5b/download/monthly_tourism_indicators.csv"
+data_raw <- readr::read_csv(url, col_types = cols(.default = "c"))
+
+# Extract column BP (68th column), starting from row 44
+bp_values <- data_raw[[68]][43:length(data_raw[[68]])]
+bp_values <- bp_values[bp_values != ""] # remove blanks
+
+# Create a date sequence starting from January 2001
+ref_dates <- seq.Date(from = as.Date("2001-01-01"), by = "month", length.out = length(bp_values))
+
+# Create the final data frame
+data_hotel <- tibble(
+  title = temp$title,
+  label = temp$label,
+  filter_var = temp$filter_var,
+  ref_date = ref_dates,
+  value = as.numeric(bp_values)
+)
+
+# Remove rows with NA values in the 'value' column
+data_hotel <- data_hotel %>% filter(!is.na(value))
+
 
 #### cleanup ----
 
 odbc::dbDisconnect(cn)
-rm(temp, #titles_nc, 
-   data_ushs, data_ind,
+rm(temp, 
    cn, DRIVE_LOCATION, PROJECT_LOCATION, months)
 
-#### save datasets ----
+# library(dplyr)
+# library(stringr)
+
+
+
+#### combine non-CANSIM datasets ----
+non_cansim_data <- bind_rows(data_ushs, data_ime, data_hotel)
+
+#### save datasets (unchanged) ----
 saveRDS(data_trip, here::here("app", "data", "exports_data.rds"))
 saveRDS(non_cansim_data, here::here("app", "data", "non_cansim_data.rds"))
 
-#### UNUSED old code ----
-# if (!require('zoo')) install.packages('zoo'); library(zoo)      ## needed for the Haver interface
-# if (!require('Haver')) install.packages('Haver', repos='http://www.haver.com/r/'); library(Haver)
+#### modify data_trip for CSV export ----
+data_trip_csv <- data_trip %>%
+  select(-title, -INDICATOR) %>%        # Remove 'title' and 'INDICATOR'
+  rename(value_dollars = value)         # Rename 'value' to 'value_dollars'
 
-# ### * (haver) Housing Starts (Units, SAAR)
-# ## Source: Haver
-# ## Haver: GM00013
-# temp <- indicators_list %>% filter(label == "Housing Starts")
-# 
-# haver.path("//decimal/DLX/DATA/")        # haver.path("restore")
-# data_cmhc <- haver.data(codes = c("GM00013"),
-#                         database = "CANADAR",
-#                         start = as.Date("2010-01-01", format = "%Y-%m-%d")) %>%
-#   data.frame() %>%
-#   rownames_to_column(var = "Date") %>%
-#   ## create vars needed for app
-#   mutate(Year = str_sub(Date, start = 1, end = 5),
-#          Month = str_sub(Date, start = 6)) %>%
-#   left_join(months, by = "Month") %>%
-#   mutate(title = temp$title, #"<b>Housing Starts</b><br>(units, SAAR)",
-#          label = temp$label, #"Housing Starts",
-#          filter_var = temp$filter_var, #"businesses",
-#          ref_date = as.Date(paste0(Year, m, "-01"), "%Y-%m-%d"),
-#          value = gm00013*1000) %>%
-#   ## re-order/name columns
-#   select(title, label, filter_var, ref_date, value)
-# 
-# 
-# 
-# 
+#### modify non_cansim_data for CSV export ----
+non_cansim_data_csv <- non_cansim_data %>%
+  # Extract text inside parentheses after </b><br>
+  mutate(units_desc = str_match(title, "</b><br>\\(([^)]*)\\)")[, 2]) %>%
+  # Rename columns and remove unwanted ones
+  rename(
+    indicator = label,
+    value_desc = units_desc
+  ) %>%
+  select(-title, -filter_var)  # Drop title and filter_var
+
+#### also save as CSV ----
+write.csv(data_trip_csv, here::here("app", "data", "exports_data.csv"), row.names = FALSE)
+write.csv(non_cansim_data_csv, here::here("app", "data", "non_cansim_data.csv"), row.names = FALSE)
+
 
 
 
