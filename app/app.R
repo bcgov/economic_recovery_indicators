@@ -193,6 +193,7 @@ ui <- function(req) {
   theme = "bootstrap.css",
   HTML("<html lang='en'>"),
   fluidRow(
+    tags$head(includeHTML("www/google-analytics.html")),
     column(width = 12,
            style = "background-color:#003366; border-bottom:2px solid #fcba19;position:fixed;z-index:10000",
            tags$header(class="header", style="padding:0 0px 0 0px; display:flex; height:80px;
