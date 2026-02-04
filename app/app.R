@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-## Economic Recovery Indicators app ----
+## Economic Indicators app ----
 ## app title: Economic-Indicators
 ## app ID: 3622761
 ## URL: https://bcstats.shinyapps.io/Economic-Indicators/
@@ -37,7 +37,7 @@ library(openxlsx)
 options(scipen = 999999999)  ## so chart axes read properly
 
 ## set exports data source ----
-source_exports <- "BC Stats using data supplied by Statistics Canada"
+source_exports <- "Adapted from Statistics Canada, International Trade Statistics (custom extract). This does not constitute an endorsement by Statistics Canada of this product."
 
 
 ## chart theme/functions ----
@@ -202,7 +202,7 @@ ui <- function(req) {
                  img(src = "bcstats_logo_rev.png", title = "BC Stats", height = "80px", alt = "British Columbia - BC Stats"),
                  onclick="gtag"
                ),
-               h1("Economic Recovery Indicators for British Columbia", style="font-weight:400; color:white; margin: 5px 5px 0 18px;")
+               h1("Economic Indicators for British Columbia", style="font-weight:400; color:white; margin: 5px 5px 0 18px;")
              )
            )
     ),
@@ -227,7 +227,7 @@ ui <- function(req) {
                                tags$fieldset(
                                  tags$legend(h3("About")),
                                  "Through the drop-down list to the right, you may choose Summary Type 
-                                 (i.e., Economic Recovery Indicators, Exports by Destination and Commodity, 
+                                 (i.e., Economic Indicators, Exports by Destination and Commodity, 
                                  or Exports by Commodity).",
                                  br(),br(),
                                  "Above, the Detailed Summary tab provides the estimate and change 
@@ -235,7 +235,7 @@ ui <- function(req) {
                                  recovery indicators, while the Charts tab displays monthly results from 2010.",
                                  br(),br(),
                                  selectInput("dataset", "Choose a dataset to download:",
-                                             choices = c("Economic Recovery Indicators", "Exports")),
+                                             choices = c("Economic Indicators", "Exports")),
                                  downloadButton("downloadData", "Download Data"),br(),br(),br(),
                                  h4("Glossary"),br(),
                                  "Throughout this dashboard, data is referenced in the following ways:",br(),
@@ -251,15 +251,15 @@ ui <- function(req) {
                           selectInput(
                             inputId = "summary_type",
                             label = NULL,
-                            choices = c("Economic Recovery Indicators", "Exports by Destination and Commodity", "Exports by Commodity"),
-                            selected = "Economic Recovery Indicators")
+                            choices = c("Economic Indicators", "Exports by Destination and Commodity", "Exports by Commodity"),
+                            selected = "Economic Indicators")
                         ),
-                        conditionalPanel(condition = "input.summary_type == 'Economic Recovery Indicators'",
+                        conditionalPanel(condition = "input.summary_type == 'Economic Indicators'",
                                          #style="background-color:#F2F2F2",
                                          br(),
                                          tags$div(
                                            style="margin-left:15px;margin-bottom:20px",
-                                           h3("B.C. Summary - Key Economic Recovery Indicators")),
+                                           h3("B.C. Summary - Key Economic Indicators")),
                                          box(title = "OVERALL ECONOMY", status = "primary",
                                              solidHeader = TRUE, width = 12, collapsible = TRUE, collapsed = FALSE,
                                              DT::dataTableOutput("ERI_overall")),
@@ -329,7 +329,7 @@ ui <- function(req) {
                         br(),
                         tags$div(
                           style="margin-left:15px;margin-bottom:20px",
-                          h3("B.C. Detailed Summary - Key Economic Recovery Indicators")
+                          h3("B.C. Detailed Summary - Key Economic Indicators")
                           ),
                         box(title = "OVERALL ECONOMY", status = "primary",
                             solidHeader = TRUE, width = 12, collapsible = TRUE, collapsed = FALSE,
@@ -398,7 +398,7 @@ ui <- function(req) {
                           'The source code for this app can be found on',
                           tags$a("Github", href= "https://github.com/bcgov/economic_recovery_indicators", target = "_blank"),
                           br(),br(),
-                          'The data in the Economic Recovery Indicators are drawn from a variety of 
+                          'The data in the Economic Indicators are drawn from a variety of 
                              sources; the sources are shown in the table below, and on the Charts tab',
                           br(),br(),h4("Statistics Canada"),
                           'Data from Statistics Canada is provided under the Statistics Canada Open License ',
@@ -410,9 +410,9 @@ ui <- function(req) {
                           'Data from the US Census Bureau is provided as open data ',
                           tags$a('(https://www.census.gov/about/policies/open-gov/open-data.html)'),
                           br(),br(),h4("CBRE Limited"),
-                          'Data from CBRE Limited ("CBRE) permitted subject to CBRE Limited Disclaimer / Terms of Use ',
-                          tags$a('(https://www.cbre.ca/en/real-estate-services/business-lines/valuation-and-advisory-services/hotels-valuation-and-advisory-services/disclaimer)'),
-                          br(),br(),
+                          ##'Data from CBRE Limited ("CBRE) permitted subject to CBRE Limited Disclaimer / Terms of Use ',
+                          ##tags$a('(https://www.cbre.ca/en/real-estate-services/business-lines/valuation-and-advisory-services/hotels-valuation-and-advisory-services/disclaimer)'),
+                          ##br(),br(),
                           DT::dataTableOutput("sources_list")
                           ),
                         br(),
@@ -443,7 +443,7 @@ ui <- function(req) {
 ## define server logic ----
 server <- function(input, output, session) {
   
-  ## Tab 1: Key Economic Recovery Indicators ----
+  ## Tab 1: Key Economic Indicators ----
   
   output$ERI_overall <- DT::renderDataTable({
     
@@ -512,7 +512,7 @@ server <- function(input, output, session) {
   # Reactive value for selected dataset to download
   datasetInput <- reactive({
     switch(input$dataset,
-           "Economic Recovery Indicators" = data_main,
+           "Economic Indicators" = data_main,
            "Exports" = data_exp)
   })
   
@@ -675,3 +675,4 @@ server <- function(input, output, session) {
 
 ## knit together ui and server ----
 shinyApp(ui = ui, server = server)
+
