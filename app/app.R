@@ -507,6 +507,9 @@ server <- function(input, output, session) {
       paste0(str_replace_all(input$dataset, " ", "_"), "_", Sys.Date(), ".csv")
     },
     content = function(file) {
+      ## send download event tracking to google analytics
+      session$sendCustomMessage("trackDownload", list(filename = paste0(str_replace_all(input$dataset, " ", "_"), ".csv")))
+      
       write.csv(datasetInput(), file, row.names = FALSE)
     }
   )
